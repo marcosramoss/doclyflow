@@ -1,5 +1,5 @@
 -- =============================================================================
--- RequisitaApp API — schema MySQL 8
+-- Doclify API — schema MySQL 8
 -- =============================================================================
 -- Aplicar com:
 --   mysql -h $DB_HOST -u $DB_USER -p$DB_PASS < api/sql/schema.sql
@@ -7,11 +7,11 @@
 --   php api/bin/migrate.php
 -- =============================================================================
 
-CREATE DATABASE IF NOT EXISTS requisitaapp
+CREATE DATABASE IF NOT EXISTS doclify
   DEFAULT CHARACTER SET utf8mb4
   DEFAULT COLLATE utf8mb4_unicode_ci;
 
-USE requisitaapp;
+USE doclify;
 
 -- ----------------------------------------------------------------------------
 -- 1. users

@@ -1,5 +1,5 @@
 // =============================================================================
-// RequisitaApp — api singleton
+// Doclify — api singleton
 // =============================================================================
 // Inicializa o client HTTP com baseUrl lê PUBLIC_API_URL do Astro
 // (em build/dev bundlado no cliente). Fallback dev-friendly para a URL

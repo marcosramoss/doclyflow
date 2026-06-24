@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Tabela de rotas do RequisitaApp API.
+ * Tabela de rotas do Doclify API.
  *
  * Convenções:
  *   - prefixo `/api/...`

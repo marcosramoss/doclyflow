@@ -1,7 +1,7 @@
 // =============================================================================
-// RequisitaApp — auth storage
+// Doclify — auth storage
 // =============================================================================
-// Persiste `{ token, user }` no localStorage sob a chave `requisitaapp:auth:v1`
+// Persiste `{ token, user }` no localStorage sob a chave `doclify:auth:v1`
 // e dispara o evento `auth-change` a cada mutação para manter os React
 // islands sincronizados em uma mesma aba e em abas irmãs (via `storage`).
 //
@@ -10,7 +10,7 @@
 
 import type { CurrentUser } from './auth';
 
-const STORAGE_KEY = 'requisitaapp:auth:v1';
+const STORAGE_KEY = 'doclify:auth:v1';
 
 interface StoredAuth {
   token: string;

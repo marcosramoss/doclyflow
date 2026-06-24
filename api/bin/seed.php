@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * RequisitaApp API — seed.
+ * Doclify API — seed.
  *
  * Cria (idempotente) o usuário demo `demo@requisita.app / demo1234`
  * e popula três documentos-modelo que espelham o frontend seed.
@@ -29,7 +29,7 @@ try {
 $demoEmail = 'demo@requisita.app';
 $demoPassword = 'demo1234';
 
-echo "Seeding RequisitaApp demo data...\n";
+echo "Seeding Doclify demo data...\n";
 
 $pdo->beginTransaction();
 try {

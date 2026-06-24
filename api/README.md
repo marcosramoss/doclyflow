@@ -1,6 +1,6 @@
-# RequisitaApp API
+# Doclify API
 
-Backend PHP/MySQL para o RequisitaApp. Stack **PHP 8.2 vanilla** (sem Composer/framework),
+Backend PHP/MySQL para o Doclify. Stack **PHP 8.2 vanilla** (sem Composer/framework),
 banco MySQL 8, autenticação por tokens opacos com hash SHA-256.
 
 > O frontend Astro+React (em `../src`) continua funcionando com seu próprio
@@ -65,7 +65,7 @@ Edite `api/.env`:
 FRONTEND_ORIGIN=http://localhost:4321
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_NAME=requisitaapp
+DB_NAME=doclify
 DB_USER=root
 DB_PASS=
 TOKEN_TTL_HOURS=168

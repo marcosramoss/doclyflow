@@ -1,5 +1,5 @@
 // =============================================================================
-// RequisitaApp — auth
+// Doclify — auth
 // =============================================================================
 // Camada fina sobre o API client. Mantém a mesma API pública de antes
 // (login/logout/isAuthenticated/getCurrentUser/initialsOf + AUTH_KEY) para
@@ -25,7 +25,7 @@ export interface LoginResult {
   error?: string;
 }
 
-export const AUTH_KEY = 'requisitaapp:auth:v1';
+export const AUTH_KEY = 'doclify:auth:v1';
 
 function describeError(e: unknown, fallback: string): string {
   if (e instanceof ApiError) {

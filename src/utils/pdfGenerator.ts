@@ -79,7 +79,7 @@ export function generateRequirementsPDF(doc: RequirementDocument): jsPDF {
   pdf.text('Levantamento de Requisitos', PAGE_MARGIN, 38);
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(9);
-  pdf.text('RequisitaApp', PAGE_WIDTH - PAGE_MARGIN, 38, { align: 'right' });
+  pdf.text('Doclify', PAGE_WIDTH - PAGE_MARGIN, 38, { align: 'right' });
 
   // Decorative accent
   pdf.setFillColor(COLORS.brandLight[0], COLORS.brandLight[1], COLORS.brandLight[2]);
@@ -259,7 +259,7 @@ export function generateRequirementsPDF(doc: RequirementDocument): jsPDF {
       COLORS.textMuted[2],
     );
     pdf.text(
-      `Gerado em ${formatDate(new Date().toISOString())} • RequisitaApp`,
+      `Gerado em ${formatDate(new Date().toISOString())} • Doclify`,
       PAGE_MARGIN,
       PAGE_HEIGHT - 24,
     );

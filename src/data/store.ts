@@ -1,5 +1,5 @@
 // =============================================================================
-// RequisitaApp — documents store
+// Doclify — documents store
 // =============================================================================
 // Substitui o antigo mock em localStorage por chamadas reais ao backend.
 //

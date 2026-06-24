@@ -1,4 +1,4 @@
-// Tipos do domínio do RequisitaApp
+// Tipos do domínio do Doclify
 
 export type RequirementType = 'functional' | 'non-functional';
 export type RequirementPriority = 'low' | 'medium' | 'high' | 'critical';

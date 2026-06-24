@@ -1,12 +1,12 @@
-# RequisitaApp — Contexto do Projeto
+# Doclify — Contexto do Projeto
 
-> Documentação viva do **RequisitaApp** — gerador web de levantamentos de requisitos com exportação em PDF, 100% client-side. Mantém arquitetura, convenções, modelo de dados e estado atualizados.
+> Documentação viva do **Doclify** — gerador web de levantamentos de requisitos com exportação em PDF, 100% client-side. Mantém arquitetura, convenções, modelo de dados e estado atualizados.
 
 ---
 
 ## 1. Visão Geral
 
-O **RequisitaApp** permite criar, organizar e exportar documentos de levantamento de requisitos em PDF diretamente no navegador. Os documentos persistem em MySQL (via API REST em `api/`); o token de sessão fica em `localStorage` do navegador.
+O **Doclify** permite criar, organizar e exportar documentos de levantamento de requisitos em PDF diretamente no navegador. Os documentos persistem em MySQL (via API REST em `api/`); o token de sessão fica em `localStorage` do navegador.
 
 **Funcionalidades-chave:**
 - Landing page (hero com preview, features, "Como funciona")
@@ -162,7 +162,7 @@ API pública (mesma da era localStorage, agora async): `getDocuments()` · `getD
 
 API pública (mesma da era mock): `login(email, password)` · `logout()` · `isAuthenticated()` · `getCurrentUser()` · `initialsOf(user)` · `AUTH_KEY` (exportada) + tipos `CurrentUser`, `LoginResult`.
 
-- Token em localStorage chave **`requisitaapp:auth:v1`** como `{ token, user }`.
+- Token em localStorage chave **`doclify:auth:v1`** como `{ token, user }`.
 - `login()`/`logout()` agora **async** — delegam para a API; em falha retorna `LoginResult = { ok:false, error }` ou silenciosamente limpa local.
 - `isAuthenticated()`/`getCurrentUser()` continuam sync (apenas leitura do storage) para uso em guards de redirect.
 - Em 401 de qualquer chamada, `apiClient` limpa o storage + dispara `auth-change` → sidebar/header reagem e o guard redireciona para `/login?next=…`.
