@@ -1,0 +1,21 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import DocumentView from '../../react/DocumentView.tsx';
+import AppSidebar from '../../react/AppSidebar.tsx';
+
+// Esta rota é SSR (lê params em runtime) — adapter Node está configurado
+// em astro.config.mjs para suportar isso dentro do output majoritariamente
+// estático do Astro 5.
+export const prerender = false;
+
+const documentId = Astro.params.id;
+---
+
+<Layout title="Documento · RequisitaApp">
+  <div class="mx-auto grid max-w-7xl items-start gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:grid-cols-[260px_1fr]">
+    <AppSidebar client:only="react" activeRoute="documents" />
+    <main class="min-w-0">
+      <DocumentView client:load documentId={documentId} />
+    </main>
+  </div>
+</Layout>

@@ -1,0 +1,52 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  hideChrome?: boolean;
+}
+
+const {
+  title = 'RequisitaApp — Levantamentos de Requisitos em PDF',
+  description = 'Crie, organize e exporte levantamentos de requisitos funcionais e não-funcionais em PDF usando o RequisitaApp.',
+  hideChrome = false,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <title>{title}</title>
+  </head>
+  <body class="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased">
+    {!hideChrome && <Header />}
+    <slot />
+    <footer class="mt-auto border-t border-slate-200 bg-white">
+      <div
+        class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-6 py-6 text-sm text-slate-500 sm:flex-row"
+      >
+        <p>
+          Doclify © {new Date().getFullYear()} — Construa levantamentos de
+          requisitos com confiança.
+        </p>
+        <p class="flex items-center gap-1.5">
+          <span class="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span>
+          Funcionando 100% no navegador
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
