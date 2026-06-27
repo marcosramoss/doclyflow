@@ -178,7 +178,7 @@ export default function DashboardTable() {
               >
                 {t.label}
                 <span
-                  className={`inline-flex h-5 min-w-[20px] items-center justify-center rounded px-1.5 text-[11px] font-bold ${
+                  className={`inline-flex h-5 min-w-5 items-center justify-center rounded px-1.5 text-[11px] font-bold ${
                     active
                       ? 'bg-brand-600 text-white'
                       : 'bg-slate-100 text-slate-600'
@@ -247,7 +247,7 @@ export default function DashboardTable() {
                 >
                   <td className="px-6 py-4">
                     <a
-                      href={`/dashboard/${d.id}`}
+                      href={`/painel/document?id=${encodeURIComponent(d.id)}`}
                       className="flex items-center gap-3 font-semibold text-slate-900 hover:text-brand-700"
                     >
                       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-brand-50 text-brand-600 ring-1 ring-brand-100 transition group-hover:bg-brand-600 group-hover:text-white">
@@ -273,7 +273,7 @@ export default function DashboardTable() {
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-1">
                       <a
-                        href={`/dashboard/${d.id}`}
+                        href={`/painel/document?id=${encodeURIComponent(d.id)}`}
                         title="Visualizar"
                         aria-label="Visualizar"
                         className="grid h-8 w-8 place-items-center rounded-md text-slate-500 transition hover:bg-brand-50 hover:text-brand-700"
@@ -281,7 +281,7 @@ export default function DashboardTable() {
                         <Eye size={16} />
                       </a>
                       <a
-                        href={`/dashboard/novo?id=${encodeURIComponent(d.id)}`}
+                        href={`/painel/novo?id=${encodeURIComponent(d.id)}`}
                         title="Editar"
                         aria-label="Editar"
                         className="grid h-8 w-8 place-items-center rounded-md text-slate-500 transition hover:bg-amber-50 hover:text-amber-700"

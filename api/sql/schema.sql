@@ -1,12 +1,32 @@
 -- =============================================================================
--- Doclify API — schema MySQL 8
+-- Doclify API — canonical schema (MySQL 8)
 -- =============================================================================
--- Aplicar com:
---   mysql -h $DB_HOST -u $DB_USER -p$DB_PASS < api/sql/schema.sql
--- ou via:
+-- ⚠️ NEVER run this file AND api/sql/migrations/0001_oauth_columns.sql
+--   in sequence. This file already encodes the post-0001 end-state; running
+--   0001 on top will fail with ER_DUPLICATE_FIELDNAME / ER_DUP_KEYNAME.
+--
+-- This file is canonical for FRESH installs and full-DB resets. It DROPS
+-- the four application tables and re-creates them in authorization order.
+--
+-- For installs that already hold data, use the NON-DESTRUCTIVE bridge:
+--     mysql ... < api/sql/migrations/0001_oauth_columns.sql
+-- That file is READ-ONLY historical and must not be edited in lockstep
+-- with future column-type changes here — it is a snapshot, not a target.
+--
+-- Apply with:
+--   mysql -h $DB_HOST -u $DB_USER -p$DB_PASS doclify < api/sql/schema.sql
 --   php api/bin/migrate.php
+--   -- or paste this file into your SQL editor and run.
+--   USE doclify;  -- ensure your sqleditor session is on `doclify`, not `mysql`.
 -- =============================================================================
 
+-- 1. Wipe existing objects in reverse FK dependency order.
+DROP TABLE IF EXISTS requirements;
+DROP TABLE IF EXISTS documents;
+DROP TABLE IF EXISTS user_tokens;
+DROP TABLE IF EXISTS users;
+
+-- 2. Ensure database exists with utf8mb4.
 CREATE DATABASE IF NOT EXISTS doclify
   DEFAULT CHARACTER SET utf8mb4
   DEFAULT COLLATE utf8mb4_unicode_ci;
@@ -15,15 +35,20 @@ USE doclify;
 
 -- ----------------------------------------------------------------------------
 -- 1. users
+-- Identidade estável via `google_sub` (do JWT do Google Identity Services).
+-- `picture` é opcional e armazena a URL do avatar do Google.
+-- `password_hash` foi removido intencionalmente (Doclify é 100% OAuth).
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
-  id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  name          VARCHAR(120) NOT NULL,
-  email         VARCHAR(190) NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name        VARCHAR(120) NOT NULL,
+  email       VARCHAR(190) NOT NULL,
+  google_sub  VARCHAR(255) NOT NULL,
+  picture     VARCHAR(512) DEFAULT NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_users_email (email)
+  UNIQUE KEY uq_users_email (email),
+  UNIQUE KEY uq_users_google_sub (google_sub)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------

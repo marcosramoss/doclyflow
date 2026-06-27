@@ -3,19 +3,17 @@ import Layout from '../../layouts/Layout.astro';
 import DocumentView from '../../react/DocumentView.tsx';
 import AppSidebar from '../../react/AppSidebar.tsx';
 
-// Esta rota é SSR (lê params em runtime) — adapter Node está configurado
-// em astro.config.mjs para suportar isso dentro do output majoritariamente
-// estático do Astro 5.
-export const prerender = false;
-
-const documentId = Astro.params.id;
+// Rota 100% estática — o ID do documento é resolvido pelo `DocumentView`
+// a partir de `?id=<uuid>` (com fallback de path para back-compat).
+// SEO é irrelevante aqui (toda a área é autenticada) e todo o roteamento
+// dinâmico passa para o React, mantendo o build como cliente estático.
 ---
 
 <Layout title="Documento · Doclify">
   <div class="mx-auto grid max-w-7xl items-start gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:grid-cols-[260px_1fr]">
     <AppSidebar client:only="react" activeRoute="documents" />
     <main class="min-w-0">
-      <DocumentView client:load documentId={documentId} />
+      <DocumentView client:load />
     </main>
   </div>
 </Layout>

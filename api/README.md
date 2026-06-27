@@ -69,6 +69,8 @@ DB_NAME=doclify
 DB_USER=root
 DB_PASS=
 TOKEN_TTL_HOURS=168
+GOOGLE_CLIENT_ID=seu-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-...
 ```
 
 ## Comandos
@@ -91,7 +93,7 @@ A API então responde em `http://127.0.0.1:8080/api/...`.
 | Método | Rota                       | Auth      | Descrição                                  |
 |--------|----------------------------|-----------|--------------------------------------------|
 | GET    | `/api/health`              | —         | Healthcheck                                |
-| POST   | `/api/auth/login`          | —         | Login (auto-registra se usuário não existe)|
+| POST   | `/api/auth/google`         | —         | Login Google OAuth (recebe ID token)       |
 | POST   | `/api/auth/logout`         | Bearer    | Invalida o token atual                     |
 | GET    | `/api/auth/me`             | Bearer    | Retorna o usuário autenticado              |
 | GET    | `/api/documents`           | Bearer    | Lista documentos do usuário                |
@@ -100,17 +102,19 @@ A API então responde em `http://127.0.0.1:8080/api/...`.
 | PUT    | `/api/documents/{id}`      | Bearer    | Atualiza (substitui requirements se enviado)|
 | DELETE | `/api/documents/{id}`      | Bearer    | Remove                                     |
 
-> Auto-registro no login reflete o comportamento do mock do frontend
-> (qualquer e-mail válido entra). Em produção, remova `AuthController::login`
-> ramo "if (!$existing)" e force erro 401 para usuários desconhecidos.
+> Login é feito exclusivamente via Google OAuth (Google Identity Services no
+> frontend + verificação do ID token via `oauth2.googleapis.com/tokeninfo`).
+> O usuário é auto-registrado na primeira autenticação; o backend vincula
+> contas por `google_sub` e mantém a primeira vista de `name`/`picture`.
 
 ## Exemplo de uso
 
 ```bash
-# Login
-TOKEN=$(curl -s -X POST http://127.0.0.1:8080/api/auth/login \
+# Login Google OAuth — encurte: troque <id_token> pelo JWT retornado pelo
+# Google Identity Services no frontend (Accounts: gsi/client).
+TOKEN=$(curl -s -X POST http://127.0.0.1:8080/api/auth/google \
   -H "Content-Type: application/json" \
-  -d '{"email":"demo@requisita.app","password":"demo1234"}' \
+  -d '{"token":"<id_token>"}' \
   | php -r 'echo json_decode(file_get_contents("php://stdin"))->token;')
 
 # Me
@@ -148,7 +152,11 @@ Toda resposta de erro segue o formato:
 
 ## Próximos passos
 
-* Trocar `localStorage` do frontend por chamadas reais (`fetch('/api/...')`).
+* Validar o ID token localmente via JWKS (`firebase/php-jwt` ou Google Auth
+  Library) ao invés do endpoint `/tokeninfo` — elimina uma chamada de rede.
 * Refresh tokens (rotacionar antes da expiração).
 * `composer require` Symfony Console + Doctrine Migrations para schema versionado.
 * Rate limiting e logs estruturados.
+> Bancos legados (pré-OAuth): rode `php api/bin/migrate-oauth.php` após o
+> `migrate.php` para adicionar `google_sub`/`picture` e remover `password_hash`
+> de forma idempotente.

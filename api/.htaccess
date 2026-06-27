@@ -1,0 +1,50 @@
+# =============================================================================
+# Doclify API — Apache config (deploy com DocumentRoot em htdocs/).
+# =============================================================================
+# Este arquivo DEVE ficar em `htdocs/api/.htaccess` quando o Apache serve
+# `C:/xampp/htdocs` como DocumentRoot. Ele captura URLs do tipo
+# `/api/health`, `/api/auth/google`, etc., e despacha tudo para o front
+# controller em `htdocs/api/public/index.php`.
+#
+# Existe também `api/public/.htaccess` para o caso alternativo de hospedar
+# o DocumentRoot diretamente em `htdocs/api/public/` (cenário incomum;
+# o Doclify assume o deploy em `htdocs/`).
+#
+# Não é necessário se for usar exclusivamente `php -S` embutido —
+# o built-in server do PHP não carrega `.htaccess`.
+# =============================================================================
+
+# ─── Diretivas de Directory/Options (sempre ativas nesta pasta) ───────────────
+# `-MultiViews` evita que `mod_negotiation` intercepte `/api/health` e similares
+# ANTES do RewriteRule rodar — esse comportamento é a causa do bug "404 em
+# GET mas PHP em POST" que motivou este arquivo.
+# `-Indexes` desabilita listagem de diretório caso surja um `/api/uploads`
+# vazio ou similar no DocumentRoot.
+Options -MultiViews -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # RewriteBase ancorado em `/api/` faz com que o target relativo
+    # `public/index.php` resolva consistentemente como `/api/public/index.php`
+    # para QUALQUER profundidade de URL sob `/api/`. Sem isso, resoluções
+    # de paths relativos em URLs profundas (`/api/foo/bar`) podem produzir
+    # strings inconsistentes (`/api/foo/bar/public/index.php`) e cair em 404.
+    RewriteBase /api/
+
+    # Permite que requisições a arquivos/diretórios reais sirvam o conteúdo
+    # diretamente, sem reescrever para index.php.
+    RewriteCond %{REQUEST_FILENAME} -d [OR]
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+
+    # Tudo o mais vai para `api/public/index.php` (relativo a RewriteBase).
+    RewriteRule ^.*$ public/index.php [L]
+</IfModule>
+
+# Bloqueia acesso direto a arquivos sensíveis dentro de `htdocs/api/*`.
+# Bloqueia `.env`, `.git*`, `.htaccess` etc — protege credenciais e o
+# estado de git caso alguém faça `cp api/` por engano.
+<FilesMatch "^\.(env|git|htaccess)">
+    Require all denied
+</FilesMatch>

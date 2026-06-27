@@ -1,9 +1,10 @@
 // =============================================================================
 // Doclify — auth
 // =============================================================================
-// Camada fina sobre o API client. Mantém a mesma API pública de antes
-// (login/logout/isAuthenticated/getCurrentUser/initialsOf + AUTH_KEY) para
-// minimizar mudanças nos consumers; agora é async.
+// Camada fina sobre o API client. Mantém a mesma API pública (`logout`,
+// `isAuthenticated`, `getCurrentUser`, `initialsOf`, `AUTH_KEY`) para
+// minimizar mudanças nos consumers; a entrada de logout agora passa pelo
+// novo endpoint `/api/auth/google`.
 //
 // Persistência e refresh cross-tab continuam no storage.ts e disparam
 // o evento `auth-change` para sincronizar React islands.
@@ -17,6 +18,8 @@ export interface CurrentUser {
   id: string;
   name: string;
   email: string;
+  /** URL do avatar retornado pelo Google Identity Services (pode ser null). */
+  picture: string | null;
 }
 
 export interface LoginResult {
@@ -30,19 +33,23 @@ export const AUTH_KEY = 'doclify:auth:v1';
 function describeError(e: unknown, fallback: string): string {
   if (e instanceof ApiError) {
     if (e.status === 0) return 'Não foi possível contatar o servidor.';
-    if (e.status === 401) return 'Credenciais inválidas.';
+    if (e.status === 401) return 'Não foi possível autenticar com o Google.';
+    if (e.status === 502) return 'Falha ao validar a sessão com o Google.';
     return e.message || fallback;
   }
   if (e instanceof Error && e.message) return e.message;
   return fallback;
 }
 
-export async function login(
-  email: string,
-  password: string,
+/**
+ * Troca o ID token do Google Identity Services por uma sessão Doclify.
+ * Chamado pelo `LoginForm` quando o usuário conclui o popup do Google.
+ */
+export async function loginWithGoogle(
+  idToken: string,
 ): Promise<LoginResult> {
   try {
-    const data = await api.auth.login(email, password);
+    const data = await api.auth.loginWithGoogle(idToken);
     authStorage.save(data.token, data.user);
     return { ok: true, user: data.user };
   } catch (e) {

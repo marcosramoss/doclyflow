@@ -211,7 +211,7 @@ export default function RequirementsForm({
       setSavedFlash(true);
       window.setTimeout(() => setSavedFlash(false), 1800);
       if (!isEditMode) {
-        window.location.href = `/dashboard/${saved.id}`;
+        window.location.href = `/painel/document?id=${encodeURIComponent(saved.id)}`;
       }
     } catch (e) {
       setErrors({
@@ -229,7 +229,7 @@ export default function RequirementsForm({
     }
     try {
       const saved = await saveDocument(buildDocument());
-      window.location.href = `/dashboard/${saved.id}`;
+      window.location.href = `/painel/document?id=${encodeURIComponent(saved.id)}`;
     } catch (e) {
       setErrors({
         _general:
@@ -244,7 +244,7 @@ export default function RequirementsForm({
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <a
-            href="/dashboard"
+            href="/painel"
             className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-brand-700"
           >
             <ArrowLeft size={16} />
@@ -491,7 +491,7 @@ export default function RequirementsForm({
       {/* Footer Actions */}
       <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
         <a
-          href="/dashboard"
+          href="/painel"
           className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100"
         >
           Cancelar

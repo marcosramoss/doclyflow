@@ -39,8 +39,24 @@ const TYPE_BADGE: Record<Requirement['type'], string> = {
   'non-functional': 'bg-violet-100 text-violet-700 ring-violet-200',
 };
 
+/**
+ * Lê o ID do documento da URL quando o componente é montado em uma página
+ * puramente estática (sem params do Astro). Usado em `painel/document.astro`
+ * para manter o painel 100% no browser, sem SSR.
+ *
+ * Como o projeto é 100% estático, URLs antigas no formato `/painel/<id>`
+ * nunca chegam aqui — Apache devolve 404 antes do React rodar. Aceitamos
+ * apenas `?id=<uuid>` na query string.
+ */
+function resolveDocumentId(explicit?: string | null): string | null {
+  if (explicit && explicit.trim()) return explicit.trim();
+  if (typeof window === 'undefined') return null;
+  const fromQuery = new URLSearchParams(window.location.search).get('id');
+  return fromQuery?.trim() || null;
+}
+
 interface DocumentViewProps {
-  documentId?: string;
+  documentId?: string | null;
 }
 
 export default function DocumentView({ documentId }: DocumentViewProps) {
@@ -48,24 +64,31 @@ export default function DocumentView({ documentId }: DocumentViewProps) {
   const [hydrated, setHydrated] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  // ID efetivo — usa prop explícita se vier, senão descobre via query/path.
+  const effectiveId = useMemo(() => resolveDocumentId(documentId), [documentId]);
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      if (documentId) {
-        try {
-          const fetched = await getDocument(documentId);
-          if (!cancelled) setDoc(fetched);
-        } catch {
-          if (!cancelled) setDoc(null);
-        }
+      if (!effectiveId) {
+        // Sem id na URL — mantemos `hydrated = false` para cair no estado
+        // vazio ("Selecione um documento") em vez de "não encontrado".
+        return;
       }
-      if (!cancelled) setHydrated(true);
+      try {
+        const fetched = await getDocument(effectiveId);
+        if (!cancelled) setDoc(fetched ?? null);
+      } catch {
+        if (!cancelled) setDoc(null);
+      } finally {
+        if (!cancelled) setHydrated(true);
+      }
     }
     load();
     return () => {
       cancelled = true;
     };
-  }, [documentId]);
+  }, [effectiveId]);
 
   // Fecha o modal com a tecla Escape
   useEffect(() => {
@@ -89,7 +112,7 @@ export default function DocumentView({ documentId }: DocumentViewProps) {
     if (!doc) return;
     try {
       await deleteDocument(doc.id);
-      window.location.href = '/dashboard';
+      window.location.href = '/painel';
     } catch (e) {
       // mantém modal aberto e mostra erro no console — UX simple por enquanto
       console.error('Falha ao excluir:', e);
@@ -102,11 +125,36 @@ export default function DocumentView({ documentId }: DocumentViewProps) {
     downloadRequirementsPDF(doc);
   }
 
-  if (!hydrated) {
+  // Resolve document antes da renderização para decidir entre os 3 estados.
+  if (!hydrated && effectiveId) {
     return (
       <div className="mx-auto max-w-5xl">
         <div className="h-8 w-48 animate-pulse rounded bg-slate-200" />
         <div className="mt-6 h-32 animate-pulse rounded-2xl bg-slate-200" />
+      </div>
+    );
+  }
+
+  if (!effectiveId) {
+    return (
+      <div className="mx-auto max-w-3xl rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
+        <span className="mx-auto inline-grid h-14 w-14 place-items-center rounded-full bg-brand-50 text-brand-600">
+          <FileTextIcon size={26} />
+        </span>
+        <h2 className="mt-4 text-lg font-semibold text-slate-900">
+          Selecione um documento
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Abra esta página a partir da lista de documentos ou compartilhe uma URL
+          no formato <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">/painel/document?id=&lt;uuid&gt;</code>.
+        </p>
+        <a
+          href="/painel"
+          className="mt-5 inline-flex items-center gap-1.5 rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
+        >
+          <ArrowLeft size={16} />
+          Voltar para Documentos
+        </a>
       </div>
     );
   }
@@ -124,7 +172,7 @@ export default function DocumentView({ documentId }: DocumentViewProps) {
           O documento requisitado não existe ou foi removido.
         </p>
         <a
-          href="/dashboard"
+          href="/painel"
           className="mt-5 inline-flex items-center gap-1.5 rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
         >
           <ArrowLeft size={16} />
@@ -139,7 +187,7 @@ export default function DocumentView({ documentId }: DocumentViewProps) {
   return (
     <div className="mx-auto w-full max-w-5xl">
       <a
-        href="/dashboard"
+        href="/painel"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-brand-700"
       >
         <ArrowLeft size={16} />
@@ -148,7 +196,7 @@ export default function DocumentView({ documentId }: DocumentViewProps) {
 
       {/* Header do documento */}
       <header className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="h-1.5 bg-gradient-to-r from-brand-500 via-sky-500 to-violet-500" />
+        <div className="h-1.5 bg-lenear-to-r from-brand-500 via-sky-500 to-violet-500" />
         <div className="px-6 py-6 sm:px-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
@@ -209,7 +257,7 @@ export default function DocumentView({ documentId }: DocumentViewProps) {
               Exportar PDF
             </button>
             <a
-              href={`/dashboard/novo?id=${encodeURIComponent(doc.id)}`}
+              href={`/painel/novo?id=${encodeURIComponent(doc.id)}`}
               className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100"
             >
               <Pencil size={16} />

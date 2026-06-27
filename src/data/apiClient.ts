@@ -32,9 +32,8 @@ export interface AuthStorage {
 
 export interface ApiClient {
   auth: {
-    login(
-      email: string,
-      password: string,
+    loginWithGoogle(
+      idToken: string,
     ): Promise<{ token: string; user: CurrentUser; expiresAt: string }>;
     logout(): Promise<void>;
     me(): Promise<{ user: CurrentUser }>;
@@ -109,11 +108,11 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
 
   return {
     auth: {
-      login: (email, password) =>
+      loginWithGoogle: (idToken) =>
         request<{ token: string; user: CurrentUser; expiresAt: string }>(
           'POST',
-          '/auth/login',
-          { email, password },
+          '/auth/google',
+          { token: idToken },
         ),
       logout: async (): Promise<void> => {
         await request<unknown>('POST', '/auth/logout');

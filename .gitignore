@@ -21,6 +21,12 @@ pnpm-debug.log*
 # astro
 .astro/
 
+# secrets — OAuth.md (root) keeps Google client_id + client_secret in
+# plaintext for local dev convenience. NEVER commit it: rotating the secret
+# in the GCP console is the only sane response if it leaks.
+# (api/.env* patterns are covered by api/.gitignore to keep concerns local.)
+OAuth.md
+
 # editors
 .vscode/*
 !.vscode/extensions.json

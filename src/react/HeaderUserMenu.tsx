@@ -51,6 +51,25 @@ export default function HeaderUserMenu() {
     );
   }
 
+  const avatar =
+    user.picture && user.picture.trim() !== ''
+      ? (
+        <img
+          src={user.picture}
+          alt={user.name}
+          referrerPolicy="no-referrer"
+          className="h-9 w-9 rounded-full bg-slate-200 object-cover shadow-sm ring-2 ring-white"
+        />
+      )
+      : (
+        <span
+          aria-hidden="true"
+          className="grid h-9 w-9 place-items-center rounded-full bg-linear-to-br from-brand-500 to-brand-700 text-sm font-bold text-white shadow-sm ring-2 ring-white"
+        >
+          {initialsOf(user)}
+        </span>
+      );
+
   return (
     <div className="flex items-center gap-3">
       <div className="hidden text-right sm:block">
@@ -59,12 +78,7 @@ export default function HeaderUserMenu() {
         </div>
         <div className="text-xs leading-tight text-slate-500">{user.email}</div>
       </div>
-      <span
-        aria-hidden="true"
-        className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-sm font-bold text-white shadow-sm ring-2 ring-white"
-      >
-        {initialsOf(user)}
-      </span>
+      {avatar}
       <button
         type="button"
         onClick={handleLogout}

@@ -63,10 +63,10 @@ export default function AppSidebar({ activeRoute = 'documents' }: AppSidebarProp
           </span>
           <div className="min-w-0">
             <div className="truncate text-sm font-bold tracking-tight text-slate-900">
-              Requisita<span className="text-brand-600">App</span>
+              Doclify
             </div>
             <div className="text-[11px] uppercase tracking-wider text-slate-500">
-              Workspace
+              Painel
             </div>
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function AppSidebar({ activeRoute = 'documents' }: AppSidebarProp
 
       <nav className="flex-1 space-y-1.5 p-3">
         <a
-          href="/dashboard"
+          href="/painel"
           className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
             activeRoute === 'documents' || activeRoute === 'view'
               ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-100'
@@ -85,7 +85,7 @@ export default function AppSidebar({ activeRoute = 'documents' }: AppSidebarProp
           Documentos
         </a>
         <a
-          href="/dashboard/novo"
+          href="/painel/novo"
           className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold shadow-sm transition active:scale-[0.98] ${
             activeRoute === 'new'
               ? 'bg-brand-700 text-white ring-1 ring-brand-700'

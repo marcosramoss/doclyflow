@@ -11,11 +11,20 @@ declare(strict_types=1);
  *
  * Os handlers são arrow functions que recebem (Request $r, ...params capturados)
  * e delegam para métodos estáticos em App\Controllers\*.
+ *
+ * NOTA IMPORTANTE sobre namespaces: este é o único arquivo de api/src/ que NÃO
+ * declara `namespace App;` — ele é montado via `require` em public/index.php
+ * (também sem namespace), que apenas popula `$router` via side-effects. NÃO
+ * remover o bloco `use App\…;` abaixo pensando "ah, mas já está em App
+ * implicitamente" — sem cada `use`, nomes unqualified como `Request` em
+ * type-hints resolvem para a raiz (`\Request`, que não existe), o que faz
+ * o roteador lançar `TypeError: must be of type Request, App\Request given`.
  */
 
 use App\Controllers\AuthController;
 use App\Controllers\DocumentsController;
 use App\Controllers\HealthController;
+use App\Request;
 
 // ---------------------------------------------------------------------------
 // Healthcheck
@@ -23,9 +32,9 @@ use App\Controllers\HealthController;
 $router->add('GET', '/api/health', static fn() => HealthController::status());
 
 // ---------------------------------------------------------------------------
-// Auth: login é público; logout/me exigem token.
+// Auth: google é público; logout/me exigem token.
 // ---------------------------------------------------------------------------
-$router->add('POST', '/api/auth/login', static fn(Request $r) => AuthController::login($r));
+$router->add('POST', '/api/auth/google', static fn(Request $r) => AuthController::google($r));
 $router->addProtected('POST', '/api/auth/logout', static fn(Request $r) => AuthController::logout($r));
 $router->addProtected('GET', '/api/auth/me', static fn(Request $r) => AuthController::me($r));
 

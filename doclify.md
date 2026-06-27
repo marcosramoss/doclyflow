@@ -25,11 +25,12 @@ src/
 ├── layouts/             # Layout base (Layout.astro)
 ├── pages/               # Roteamento baseado em arquivos (Astro)
 │   ├── index.astro      # Landing Page
-│   └── dashboard/
+│   └── painel/
 │       ├── index.astro  # Aba: Todos os Documentos (Tabela)
 │       ├── novo.astro   # Aba: Criar Documento (Formulário)
-│       └── [id].astro   # Tela do Documento Individual (Visualização)
+│       └── document.astro  # Visualizar documento (?id=<uuid>, client-side)
 ├── react/               # Componentes interativos em React
+│   ├── AppSidebar.tsx
 │   ├── DashboardTable.tsx
 │   ├── RequirementsForm.tsx
 │   └── DocumentView.tsx

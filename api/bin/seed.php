@@ -11,8 +11,8 @@ declare(strict_types=1);
  *
  * Use para testar a API rapidamente sem depender do frontend:
  *   curl -X POST -H "Content-Type: application/json" \
-        -d '{"email":"demo@requisita.app","password":"demo1234"}' \
-        http://localhost:8080/api/auth/login
+        -d '{"token":"<id_token>"}' \
+        http://localhost:8080/api/auth/google
  */
 
 require __DIR__ . '/../src/bootstrap.php';
@@ -27,24 +27,29 @@ try {
 }
 
 $demoEmail = 'demo@requisita.app';
-$demoPassword = 'demo1234';
+// `google_sub` fixo para o usuário demo — permite que `bin/migrate-oauth.php`
+// preserve os 3 documentos-modelo em upgrades de bancos pré-OAuth e que
+// `bin/seed.php` permaneça idempotente em re-execuções.
+// Em uso real via frontend, este usuário é substituído pelo registro real do
+// Google Identity Services (sub diferente, o `UNIQUE` continua valendo).
+$demoSub = 'seed-demo-00000000-0000-0000-0000-000000000000';
 
 echo "Seeding Doclify demo data...\n";
 
 $pdo->beginTransaction();
 try {
-    // 1. Usuário demo
+    // 1. Usuário demo (identidade Google fixa; sem senha)
     $stmt = $pdo->prepare(
-        'INSERT INTO users (name, email, password_hash)
-         VALUES (:n, :e, :p)
+        'INSERT INTO users (name, email, google_sub, picture)
+         VALUES (:n, :e, :s, NULL)
          ON DUPLICATE KEY UPDATE
             name = VALUES(name),
-            password_hash = VALUES(password_hash)'
+            google_sub = VALUES(google_sub)'
     );
     $stmt->execute([
         'n' => 'Demo User',
         'e' => $demoEmail,
-        'p' => password_hash($demoPassword, PASSWORD_DEFAULT),
+        's' => $demoSub,
     ]);
     $userId = (int) $pdo->query(
         "SELECT id FROM users WHERE email = " . $pdo->quote($demoEmail)
@@ -159,5 +164,5 @@ try {
 }
 
 echo "Seed completed.\n";
-echo "  User: $demoEmail / $demoPassword\n";
+echo "  User: $demoEmail (google_sub=seed-demo-…, passwordless)\n";
 echo "  Documents: " . count($docs) . " demo records\n";
