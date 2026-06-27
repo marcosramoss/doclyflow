@@ -84,7 +84,7 @@ export default function AppSidebar({
     <>
       <div className="border-b border-slate-200 p-5">
         <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-sm">
+          <span className="grid h-10 w-10 place-items-center rounded-lg bg-linear-to-br from-brand-500 to-brand-700 text-white shadow-sm">
             <LayoutGrid size={18} />
           </span>
           <div className="min-w-0">
@@ -129,7 +129,7 @@ export default function AppSidebar({
         <div className="flex items-start gap-3 rounded-lg bg-slate-50/60 p-3">
           <span
             aria-hidden="true"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-xs font-bold text-white shadow-sm"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-linear-to-br from-brand-500 to-brand-700 text-xs font-bold text-white shadow-sm"
           >
             {initialsOf(user)}
           </span>
@@ -165,7 +165,7 @@ export default function AppSidebar({
       </button>
 
       {/* 2. Sidebar desktop — fixed à esquerda, ≥lg */}
-      <aside className="fixed left-0 top-0 z-30 hidden h-[100dvh] w-[260px] flex-col overflow-hidden border-r border-slate-200 bg-white shadow-sm lg:flex">
+      <aside className="fixed left-0 top-0 z-30 hidden h-dvh w-65 flex-col overflow-hidden border-r border-slate-200 bg-white shadow-sm lg:flex">
         {SidebarBody}
       </aside>
 

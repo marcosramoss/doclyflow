@@ -46,6 +46,25 @@ final class Request
     public function bearer(): ?string
     {
         $h = $this->header('authorization');
+
+        // Fallback: alguns builds do Apache (mod_rewrite strips o header em
+        // rewrites internas; CGI/FPM nunca o expõe em `$_SERVER`) chegam em
+        // PHP com `HTTP_AUTHORIZATION` vazio mesmo quando o cliente envia o
+        // header. `apache_request_headers()` lê diretamente do Apache, fora
+        // do canal que faz o stripping. Especialmente crítico em POST/PUT com
+        // body, onde o stripping é mais comum.
+        if ($h === null && function_exists('apache_request_headers')) {
+            $apache = @apache_request_headers();
+            if (is_array($apache)) {
+                foreach ($apache as $name => $value) {
+                    if (strtolower((string) $name) === 'authorization') {
+                        $h = is_array($value) ? ($value[0] ?? null) : (string) $value;
+                        break;
+                    }
+                }
+            }
+        }
+
         if ($h === null) {
             return null;
         }

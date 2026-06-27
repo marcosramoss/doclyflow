@@ -25,6 +25,16 @@ Options -MultiViews -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # Repassa o header `Authorization: Bearer …` para o PHP em rewrites
+    # internos. Apache + mod_rewrite historicamente STRIPA o header
+    # `Authorization` antes de chegar em `$_SERVER['HTTP_AUTHORIZATION']`
+    # — sem esta regra, TODOS os endpoints protegidos (`Router::addProtected`)
+    # falham com `401 Missing Authorization header` mesmo quando o cliente
+    # envia o Bearer corretamente. A `RewriteCond` evita gerar
+    # `[E=HTTP_AUTHORIZATION:]` vazio quando o request não traz o header.
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
     # RewriteBase ancorado em `/api/` faz com que o target relativo
     # `public/index.php` resolva consistentemente como `/api/public/index.php`
     # para QUALQUER profundidade de URL sob `/api/`. Sem isso, resoluções
