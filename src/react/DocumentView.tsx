@@ -4,6 +4,7 @@ import {
   Pencil,
   Trash2,
   FileDown,
+  FileCode,
   CheckCircle2,
   Clock,
   FileText as FileTextIcon,
@@ -19,6 +20,7 @@ import {
   type RequirementDocument,
 } from '../data/types';
 import { downloadRequirementsPDF } from '../utils/pdfGenerator';
+import { downloadDocumentMarkdown } from '../utils/markdownGenerator';
 import { formatDate, formatDateTime } from '../utils/dates';
 
 const STATUS_STYLES: Record<DocumentStatus, { bg: string; icon: React.ElementType }> = {
@@ -123,6 +125,11 @@ export default function DocumentView({ documentId }: DocumentViewProps) {
   function handleExport() {
     if (!doc) return;
     downloadRequirementsPDF(doc);
+  }
+
+  function handleExportMd() {
+    if (!doc) return;
+    downloadDocumentMarkdown(doc);
   }
 
   // Resolve document antes da renderização para decidir entre os 3 estados.
@@ -255,6 +262,15 @@ export default function DocumentView({ documentId }: DocumentViewProps) {
             >
               <FileDown size={16} />
               Exportar PDF
+            </button>
+            <button
+              type="button"
+              onClick={handleExportMd}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 active:scale-[0.98]"
+              title="Exporta o documento em Markdown — ideal para usar como skill em uma IA"
+            >
+              <FileCode size={16} />
+              Exportar MD
             </button>
             <a
               href={`/painel/novo?id=${encodeURIComponent(doc.id)}`}
