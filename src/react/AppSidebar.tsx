@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import {
   FileText,
   LogOut,
-  Plus,
   LayoutGrid,
   Menu,
   X,
@@ -111,28 +110,25 @@ export default function AppSidebar({
           <FileText size={16} />
           Documentos
         </a>
-        <a
-          href="/painel/novo"
-          className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold shadow-sm transition active:scale-[0.98] ${
-            activeRoute === 'new'
-              ? 'bg-brand-700 text-white ring-1 ring-brand-700'
-              : 'bg-brand-600 text-white hover:bg-brand-700'
-          }`}
-          onClick={closeDrawer}
-        >
-          <Plus size={16} />
-          Novo Documento
-        </a>
       </nav>
 
       <div className="border-t border-slate-200 p-3">
         <div className="flex items-start gap-3 rounded-lg bg-slate-50/60 p-3">
-          <span
-            aria-hidden="true"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-linear-to-br from-brand-500 to-brand-700 text-xs font-bold text-white shadow-sm"
-          >
-            {initialsOf(user)}
-          </span>
+          {user.picture && user.picture.trim() !== '' ? (
+            <img
+              src={user.picture}
+              alt={user.name}
+              referrerPolicy="no-referrer"
+              className="h-9 w-9 shrink-0 rounded-full bg-slate-200 object-cover shadow-sm ring-1 ring-white"
+            />
+          ) : (
+            <span
+              aria-hidden="true"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-linear-to-br from-brand-500 to-brand-700 text-xs font-bold text-white shadow-sm"
+            >
+              {initialsOf(user)}
+            </span>
+          )}
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-semibold text-slate-900">
               {user.name}
