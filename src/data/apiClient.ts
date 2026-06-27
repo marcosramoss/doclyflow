@@ -142,6 +142,9 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
           throw e;
         }
       },
+      // O document (com tecnologias: string[]) vai direto no body — sem
+      // transformação/intermediários. Backend decodifica o array e persiste
+      // como CSV em `documents.technologies`.
       create: async (doc) => {
         const data = await request<{ document: RequirementDocument }>(
           'POST',

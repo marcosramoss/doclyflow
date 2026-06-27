@@ -37,6 +37,7 @@ export function generateDocumentMarkdown(doc: RequirementDocument): string {
 
   const functional = doc.requirements.filter((r) => r.type === 'functional');
   const nonFunctional = doc.requirements.filter((r) => r.type === 'non-functional');
+  const techs = doc.technologies ?? [];
 
   const lines: string[] = [];
 
@@ -59,7 +60,21 @@ export function generateDocumentMarkdown(doc: RequirementDocument): string {
     lines.push('');
   }
 
-  // ─── Resumo dos requisitos ──────────────────────────────────────────────
+  // ─── Stack Tecnológica ──────────────────────────────────────────────────
+  // Lista plana dos NOMES das tecnologias (strings). Sem logos, sem
+  // categorias — o usuário pode ter selecionado itens do catálogo fixo
+  // (React, PHP…) ou digitado um nome livre no campo "Outra"; tudo vai
+  // aqui como bullet simples. Limpo para LLMs consumirem como skill.
+  if (techs.length > 0) {
+    lines.push('## Stack Tecnológica');
+    lines.push('');
+    for (const name of techs) {
+      lines.push(`- ${name}`);
+    }
+    lines.push('');
+  }
+
+  // ─── Requisitos ────────────────────────────────────────────────────────
   lines.push('## Requisitos');
   lines.push('');
   if (doc.requirements.length === 0) {

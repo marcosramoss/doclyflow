@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   Check,
+  Layers,
   Plus,
   Save,
   Sparkles,
@@ -36,7 +37,48 @@ type FormState = {
   description: string;
   status: DocumentStatus;
   requirements: FormRequirement[];
+  /**
+   * Set de nomes de tecnologias marcadas no formulário (catálogo fixo +
+   * texto de "Outra" quando preenchido). Strings puras — sem ID, sem
+   * catálogo. Persistido como `string[]` em `documents.technologies`.
+   */
+  selectedTechs: string[];
+  /**
+   * Visibilidade do campo "Outra". Independente do texto digitado — se o
+   * usuário desmarca "Outra" sem apagar o texto, na hora de salvar ele ainda
+   * pode ser incluída se o texto não-vazio (o backend aceita qualquer string
+   * via array de tecnologias).
+   */
+  useOtherTech: boolean;
+  /**
+   * Texto digitado no campo "Outra (especificar)". Vai persistir como um
+   * item extra em `selectedTechs` apenas quando o checkbox está marcado e o
+   * texto tem pelo menos 1 caractere.
+   */
+  otherTechnology: string;
 };
+
+/**
+ * Lista fixa de 14 tecnologias exibidas como checkboxes. Mantida inline
+ * propositadamente — sem catálogo/backend (decisão de simplificação: tudo é
+ * string). O usuário pediu exatamente este conjunto.
+ */
+const TECH_CATALOG: readonly string[] = [
+  'React',
+  'Vue.js',
+  'Next.js',
+  'Tailwind CSS',
+  'Node.js',
+  'TypeScript',
+  'PHP',
+  'Python',
+  'MySQL',
+  'PostgreSQL',
+  'Redis',
+  'Docker',
+  'GitHub Actions',
+  'MongoDB',
+];
 
 function makeEmptyRequirement(): FormRequirement {
   return {
@@ -50,12 +92,15 @@ function makeEmptyRequirement(): FormRequirement {
 function makeEmptyDocument(): FormState {
   return {
     id: generateId(),
-    createdAt: '', // preenchido com a data do servidor no primeiro save
+    createdAt: '',
     title: '',
     client: '',
     description: '',
     status: 'draft',
     requirements: [makeEmptyRequirement()],
+    selectedTechs: [],
+    useOtherTech: false,
+    otherTechnology: '',
   };
 }
 
@@ -107,6 +152,13 @@ export default function RequirementsForm({
           const existing = await getDocument(documentId);
           if (cancelled) return;
           if (existing) {
+            const techsFromCatalog = (existing.technologies ?? []).filter(
+              (t) => TECH_CATALOG.includes(t),
+            );
+            const customText = (existing.technologies ?? []).find(
+              (t) => !TECH_CATALOG.includes(t),
+            );
+            const hasCustom = Boolean(customText);
             setForm({
               id: existing.id,
               createdAt: existing.createdAt,
@@ -115,6 +167,9 @@ export default function RequirementsForm({
               description: existing.description,
               status: existing.status,
               requirements: existing.requirements.map((r) => ({ ...r })),
+              selectedTechs: techsFromCatalog,
+              useOtherTech: hasCustom,
+              otherTechnology: customText ?? '',
             });
           }
         } catch {
@@ -139,6 +194,13 @@ export default function RequirementsForm({
     const n = form.requirements.length - f;
     return { total: form.requirements.length, functional: f, nonFunctional: n };
   }, [form.requirements]);
+
+  // Quantidade efetiva exibida (catálogo + "Outra" não-vazio).
+  const techCount = useMemo(() => {
+    const fromOther =
+      form.useOtherTech && form.otherTechnology.trim() ? 1 : 0;
+    return form.selectedTechs.length + fromOther;
+  }, [form.selectedTechs, form.useOtherTech, form.otherTechnology]);
 
   function patch<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -167,6 +229,34 @@ export default function RequirementsForm({
     }));
   }
 
+  // Toggle de uma tecnologia do catálogo. Usa o nome do `TECH_CATALOG`
+  // (string) — sem ID/sem catálogos.
+  function toggleTech(name: string) {
+    setForm((prev) => {
+      const isSelected = prev.selectedTechs.includes(name);
+      const selectedTechs = isSelected
+        ? prev.selectedTechs.filter((n) => n !== name)
+        : [...prev.selectedTechs, name];
+      return { ...prev, selectedTechs };
+    });
+  }
+
+  function toggleOtherTech() {
+    setForm((prev) => ({ ...prev, useOtherTech: !prev.useOtherTech }));
+  }
+
+  function clearTechSelection() {
+    setForm((prev) => ({
+      ...prev,
+      selectedTechs: [],
+      useOtherTech: false,
+      // Mantém o texto digitado: o usuário pode re-marcar "Outra" sem
+      // perder o que escreveu — só vai ao backend se a checkbox
+      // continuar marcada no submit.
+      otherTechnology: prev.otherTechnology,
+    }));
+  }
+
   function validate(): boolean {
     const next: { [k: string]: string } = {};
     if (!form.title.trim()) next.title = 'Informe um título para o documento.';
@@ -184,6 +274,16 @@ export default function RequirementsForm({
 
   function buildDocument(): RequirementDocument {
     const now = new Date().toISOString();
+    // Mescla catálogo + "Outra" (se checkbox marcado E texto não-vazio).
+    // Strings puras; backend persiste como CSV.
+    const custom =
+      form.useOtherTech && form.otherTechnology.trim()
+        ? [form.otherTechnology.trim()]
+        : [];
+    const technologies = [
+      ...form.selectedTechs.filter((t) => t.trim().length > 0),
+      ...custom,
+    ];
     return {
       id: form.id,
       title: form.title.trim(),
@@ -198,6 +298,7 @@ export default function RequirementsForm({
         priority: r.priority,
         description: r.description.trim(),
       })),
+      technologies,
     };
   }
 
@@ -486,6 +587,126 @@ export default function RequirementsForm({
             </li>
           ))}
         </ol>
+      </section>
+
+      {/* Card Tecnologias — 14 checkboxes fixas + "Outra" que abre campo
+          livre. Tudo é string na forma; backend persiste como CSV. */}
+      <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50/60 px-6 py-4">
+          <div className="flex items-center gap-3">
+            <span className="grid h-9 w-9 place-items-center rounded-md bg-brand-50 text-brand-600">
+              <Layers size={18} />
+            </span>
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">
+                Tecnologias
+              </h2>
+              <p className="text-xs text-slate-500">
+                {techCount === 0
+                  ? 'Marque as tecnologias usadas no projeto (opcional).'
+                  : `${techCount} selecionada${techCount === 1 ? '' : 's'}`}
+              </p>
+            </div>
+          </div>
+          {techCount > 0 && (
+            <button
+              type="button"
+              onClick={clearTechSelection}
+              className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+            >
+              Limpar seleção
+            </button>
+          )}
+        </header>
+
+        <ul className="divide-y divide-slate-100">
+          {TECH_CATALOG.map((name) => {
+            const checked = form.selectedTechs.includes(name);
+            return (
+              <li key={name}>
+                <label className="flex cursor-pointer items-center gap-3 px-6 py-3 transition hover:bg-slate-50">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleTech(name)}
+                    className="sr-only"
+                    aria-label={name}
+                  />
+                  <span
+                    aria-hidden
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition ${
+                      checked
+                        ? 'border-brand-500 bg-brand-500'
+                        : 'border-slate-300 bg-white'
+                    }`}
+                  >
+                    {checked && (
+                      <Check
+                        size={12}
+                        strokeWidth={3}
+                        className="text-white"
+                      />
+                    )}
+                  </span>
+                  <span className="flex-1 text-sm font-medium text-slate-700">
+                    {name}
+                  </span>
+                </label>
+              </li>
+            );
+          })}
+          {/* "Outra" — quando marcada revela um campo de texto livre cujo
+              conteúdo vai para a mesma lista de techs na hora de salvar. */}
+          <li>
+            <label className="flex cursor-pointer items-center gap-3 px-6 py-3 transition hover:bg-slate-50">
+              <input
+                type="checkbox"
+                checked={form.useOtherTech}
+                onChange={toggleOtherTech}
+                className="sr-only"
+                aria-label="Outra tecnologia (especificar)"
+              />
+              <span
+                aria-hidden
+                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition ${
+                  form.useOtherTech
+                    ? 'border-brand-500 bg-brand-500'
+                    : 'border-slate-300 bg-white'
+                }`}
+              >
+                {form.useOtherTech && (
+                  <Check
+                    size={12}
+                    strokeWidth={3}
+                    className="text-white"
+                  />
+                )}
+              </span>
+              <span className="flex-1 text-sm font-medium text-slate-700">
+                Outra{' '}
+                <span className="font-normal text-slate-500">
+                  (especificar)
+                </span>
+              </span>
+            </label>
+            {form.useOtherTech && (
+              <div className="px-6 pb-4">
+                <input
+                  type="text"
+                  value={form.otherTechnology}
+                  onChange={(e) => patch('otherTechnology', e.target.value)}
+                  placeholder="Ex.: Stripe, GraphQL, AWS Lambda…"
+                  maxLength={100}
+                  autoFocus
+                  className="w-full max-w-md rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                />
+                <p className="mt-1.5 text-xs text-slate-500">
+                  Será adicionado ao stack e exportado como item no Markdown.
+                </p>
+              </div>
+            )}
+          </li>
+        </ul>
       </section>
 
       {/* Footer Actions */}

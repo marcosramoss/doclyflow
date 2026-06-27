@@ -190,6 +190,7 @@ export default function DocumentView({ documentId }: DocumentViewProps) {
   }
 
   const statusMeta = STATUS_STYLES[doc.status];
+  const techs = doc.technologies ?? [];
 
   return (
     <div className="mx-auto w-full max-w-5xl">
@@ -203,7 +204,7 @@ export default function DocumentView({ documentId }: DocumentViewProps) {
 
       {/* Header do documento */}
       <header className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="h-1.5 bg-lenear-to-r from-brand-500 via-sky-500 to-violet-500" />
+        <div className="h-1.5 bg-gradient-to-r from-brand-500 via-sky-500 to-violet-500" />
         <div className="px-6 py-6 sm:px-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
@@ -250,6 +251,22 @@ export default function DocumentView({ documentId }: DocumentViewProps) {
               <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
                 {doc.description}
               </p>
+            </div>
+          )}
+
+          {techs.length > 0 && (
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Stack
+              </span>
+              {techs.map((name) => (
+                <span
+                  key={name}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700"
+                >
+                  {name}
+                </span>
+              ))}
             </div>
           )}
 

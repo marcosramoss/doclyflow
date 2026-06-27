@@ -13,16 +13,19 @@ use PDO;
 /**
  * CRUD de documentos de levantamento de requisitos.
  *
- * Todas as rotas são protegidas via Router::addProtected, então
- * $request->userId chega validado. Operações filtram por user_id
- * garantindo que o usuário só enxerga/edita os próprios documentos.
+ * Endpoints protegidos via Router::addProtected → $request->userId validado.
+ * Operações filtram por user_id, garantindo isolamento por usuário.
  *
  * Endpoints:
  *   GET    /api/documents       → lista (ordenada por updated_at desc)
  *   GET    /api/documents/{id}  → detalha
- *   POST   /api/documents       → cria (substitui lista de requirements)
- *   PUT    /api/documents/{id}  → atualiza campos + requirements opcionalmente
- *   DELETE /api/documents/{id}  → remove (cascade nas requirements)
+ *   POST   /api/documents       → cria
+ *   PUT    /api/documents/{id}  → atualiza
+ *   DELETE /api/documents/{id}  → remove (cascade em requirements)
+ *
+ * Nota: `technologies` é um array de strings (nomes livres, sem catálogo).
+ * Persistido em `documents.technologies TEXT` como CSV. `null` (coluna vazia)
+ * é equivalente a "sem stack selecionada".
  */
 final class DocumentsController
 {
@@ -34,14 +37,14 @@ final class DocumentsController
     {
         $pdo = Database::pdo();
         $stmt = $pdo->prepare(
-            'SELECT id, title, client, description, status, created_at, updated_at
+            'SELECT id, title, client, description, technologies, status, created_at, updated_at
              FROM documents
              WHERE user_id = :u
              ORDER BY updated_at DESC'
         );
         $stmt->execute(['u' => $request->userId]);
         $docs = array_map(
-            static fn(array $r): array => self::hydrate($pdo, $r),
+            static fn(array $r): array => self::hydrate($r),
             $stmt->fetchAll()
         );
         Response::json(['documents' => $docs]);
@@ -64,6 +67,7 @@ final class DocumentsController
         $title = trim((string) $body['title']);
         $client = trim((string) $body['client']);
         $description = trim((string) ($body['description'] ?? ''));
+        $technologies = self::normalizeTechnologies($body['technologies'] ?? null);
         $status = self::validateEnum('status', $body['status'] ?? 'draft', self::STATUSES);
         $reqList = self::normalizeRequirements($body['requirements'] ?? []);
 
@@ -74,18 +78,19 @@ final class DocumentsController
         try {
             $insDoc = $pdo->prepare(
                 'INSERT INTO documents
-                   (id, user_id, title, client, description, status, created_at, updated_at)
-                 VALUES (:id, :u, :t, :c, :d, :s, :ca, :ua)'
+                   (id, user_id, title, client, description, technologies, status, created_at, updated_at)
+                 VALUES (:id, :u, :t, :c, :d, :tech, :s, :ca, :ua)'
             );
             $insDoc->execute([
-                'id' => $id,
-                'u' => $request->userId,
-                't' => $title,
-                'c' => $client,
-                'd' => $description,
-                's' => $status,
-                'ca' => $now,
-                'ua' => $now,
+                'id'   => $id,
+                'u'    => $request->userId,
+                't'    => $title,
+                'c'    => $client,
+                'd'    => $description,
+                'tech' => self::encodeTechnologies($technologies),
+                's'    => $status,
+                'ca'   => $now,
+                'ua'   => $now,
             ]);
             self::insertRequirements($pdo, $id, $reqList);
             $pdo->commit();
@@ -115,6 +120,10 @@ final class DocumentsController
         $title = trim((string) $body['title']);
         $client = trim((string) $body['client']);
         $description = trim((string) ($body['description'] ?? $existing['description']));
+        $technologiesProvided = array_key_exists('technologies', $body);
+        $technologies = $technologiesProvided
+            ? self::normalizeTechnologies($body['technologies'])
+            : self::decodeTechnologies($existing['technologies']);
         $status = self::validateEnum(
             'status',
             $body['status'] ?? $existing['status'],
@@ -130,17 +139,19 @@ final class DocumentsController
         try {
             $upd = $pdo->prepare(
                 'UPDATE documents
-                 SET title = :t, client = :c, description = :d, status = :s, updated_at = :ua
+                 SET title = :t, client = :c, description = :d, technologies = :tech,
+                     status = :s, updated_at = :ua
                  WHERE id = :id AND user_id = :u'
             );
             $upd->execute([
-                't' => $title,
-                'c' => $client,
-                'd' => $description,
-                's' => $status,
-                'ua' => gmdate('Y-m-d H:i:s'),
-                'id' => $id,
-                'u' => $request->userId,
+                't'    => $title,
+                'c'    => $client,
+                'd'    => $description,
+                'tech' => self::encodeTechnologies($technologies),
+                's'    => $status,
+                'ua'   => gmdate('Y-m-d H:i:s'),
+                'id'   => $id,
+                'u'    => $request->userId,
             ]);
             if ($reqList !== null) {
                 $del = $pdo->prepare('DELETE FROM requirements WHERE document_id = :d');
@@ -179,17 +190,18 @@ final class DocumentsController
     {
         $pdo = Database::pdo();
         $stmt = $pdo->prepare(
-            'SELECT id, title, client, description, status, created_at, updated_at
+            'SELECT id, title, client, description, technologies, status, created_at, updated_at
              FROM documents
              WHERE id = :id AND user_id = :u LIMIT 1'
         );
         $stmt->execute(['id' => $id, 'u' => $request->userId]);
         $row = $stmt->fetch();
-        return $row === false ? null : self::hydrate($pdo, $row);
+        return $row === false ? null : self::hydrate($row);
     }
 
-    private static function hydrate(PDO $pdo, array $row): array
+    private static function hydrate(array $row): array
     {
+        $pdo = Database::pdo();
         $reqStmt = $pdo->prepare(
             'SELECT id, type, description, priority
              FROM requirements
@@ -199,22 +211,23 @@ final class DocumentsController
         $reqStmt->execute(['d' => $row['id']]);
         $reqs = array_map(
             static fn(array $r): array => [
-                'id' => (string) $r['id'],
-                'type' => (string) $r['type'],
+                'id'          => (string) $r['id'],
+                'type'        => (string) $r['type'],
                 'description' => (string) $r['description'],
-                'priority' => (string) $r['priority'],
+                'priority'    => (string) $r['priority'],
             ],
             $reqStmt->fetchAll()
         );
 
         return [
-            'id' => (string) $row['id'],
-            'title' => (string) $row['title'],
-            'client' => (string) $row['client'],
-            'description' => (string) $row['description'],
-            'status' => (string) $row['status'],
-            'createdAt' => self::iso($row['created_at']),
-            'updatedAt' => self::iso($row['updated_at']),
+            'id'           => (string) $row['id'],
+            'title'        => (string) $row['title'],
+            'client'       => (string) $row['client'],
+            'description'  => (string) $row['description'],
+            'technologies' => self::decodeTechnologies($row['technologies'] ?? null),
+            'status'       => (string) $row['status'],
+            'createdAt'    => self::iso($row['created_at']),
+            'updatedAt'    => self::iso($row['updated_at']),
             'requirements' => $reqs,
         ];
     }
@@ -235,22 +248,92 @@ final class DocumentsController
             if (!is_array($r)) {
                 continue;
             }
-            $type = self::validateEnum('type', $r['type'] ?? 'functional', self::TYPES);
+            $type     = self::validateEnum('type', $r['type'] ?? 'functional', self::TYPES);
             $priority = self::validateEnum('priority', $r['priority'] ?? 'medium', self::PRIORITIES);
-            $desc = trim((string) ($r['description'] ?? ''));
+            $desc     = trim((string) ($r['description'] ?? ''));
             $out[] = [
-                'id' => 'req-' . self::shortId(6),
-                'type' => $type,
+                'id'          => 'req-' . self::shortId(6),
+                'type'        => $type,
                 'description' => $desc,
-                'priority' => $priority,
+                'priority'    => $priority,
             ];
         }
         return $out;
     }
 
     /**
-     * @param list<string> $allowed
+     * Normaliza o array `technologies` recebido do body em uma lista dedupada +
+     * trimada de strings. Aceita `null` ou ausente (sem techs). Aceita lista
+     * vazia (limpa stack). Rejeita tipos não-array (400). Limita o tamanho
+     * por entrada para evitar payloads abusivos.
+     *
+     * @return list<string>
      */
+    private static function normalizeTechnologies(mixed $raw): array
+    {
+        if ($raw === null) {
+            return [];
+        }
+        if (!is_array($raw)) {
+            throw new HttpException(400, 'technologies must be an array of strings');
+        }
+        $out = [];
+        foreach ($raw as $t) {
+            if (!is_string($t)) {
+                continue;
+            }
+            $trim = trim($t);
+            if ($trim === '') {
+                continue;
+            }
+            if (strlen($trim) > 100) {
+                throw new HttpException(
+                    400,
+                    'technology name too long',
+                    ['maxLength' => 100, 'actual' => strlen($trim), 'value' => $trim],
+                );
+            }
+            $out[] = $trim;
+        }
+        return array_values(array_unique($out));
+    }
+
+    /** Serializa lista para CSV a gravar na coluna TEXT. */
+    private static function encodeTechnologies(array $techs): ?string
+    {
+        if (count($techs) === 0) {
+            return null;
+        }
+        return implode(', ', $techs);
+    }
+
+    /**
+     * Decodifica CSV da coluna TEXT em array de strings. Tolerante a:
+     *   - null/'' (vazio → [])
+     *   - espaços extras (`" A , B  , C"` → `["A", "B", "C"]`)
+     *   - itens vazios após split (filtrados)
+     */
+    private static function decodeTechnologies(?string $raw): array
+    {
+        if ($raw === null) {
+            return [];
+        }
+        $trimmed = trim($raw);
+        if ($trimmed === '') {
+            return [];
+        }
+        $parts = explode(',', $trimmed);
+        $out = [];
+        foreach ($parts as $p) {
+            $v = trim($p);
+            if ($v !== '') {
+                $out[] = $v;
+            }
+        }
+        return array_values(array_unique($out));
+    }
+
+    /** @param list<string> $allowed */
     private static function validateEnum(string $field, mixed $value, array $allowed): string
     {
         if (!is_string($value) || !Validator::oneOf($value, $allowed)) {
@@ -270,11 +353,11 @@ final class DocumentsController
         $pos = 0;
         foreach ($reqs as $r) {
             $stmt->execute([
-                'i' => $r['id'],
-                'd' => $docId,
-                't' => $r['type'],
-                'ds' => $r['description'],
-                'p' => $r['priority'],
+                'i'   => $r['id'],
+                'd'   => $docId,
+                't'   => $r['type'],
+                'ds'  => $r['description'],
+                'p'   => $r['priority'],
                 'pos' => $pos++,
             ]);
         }

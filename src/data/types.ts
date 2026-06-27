@@ -20,6 +20,17 @@ export interface RequirementDocument {
   createdAt: string;
   updatedAt: string;
   requirements: Requirement[];
+  /**
+   * Stack tecnológica escolhida pelo autor — apenas strings com os NOMES das
+   * tecnologias (ex.: ["React", "TypeScript", "PostgreSQL"]). Sem catálogo,
+   * sem ID — o usuário marca livremente os checkboxes do formulário e cada
+   * nome é persistido como texto. Persistido em `documents.technologies`
+   * (coluna TEXT) como CSV. `[]` ou ausente = sem stack.
+   *
+   * Inclui também o texto do checkbox "Outra" quando o usuário preenche o
+   * input customizado; como é apenas uma string, vai no mesmo array.
+   */
+  technologies?: string[];
 }
 
 export const STATUS_LABEL: Record<DocumentStatus, string> = {

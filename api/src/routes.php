@@ -66,3 +66,5 @@ $router->addProtected(
     '/api/documents/:id',
     static fn(Request $r, string $id) => DocumentsController::destroy($r, $id)
 );
+// Nota: a rota /api/technologies foi removida junto com o catálogo —
+// technologies agora são strings livres persistidas em documents.technologies.
