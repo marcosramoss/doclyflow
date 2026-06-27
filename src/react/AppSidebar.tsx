@@ -4,6 +4,8 @@ import {
   LogOut,
   Plus,
   LayoutGrid,
+  Menu,
+  X,
 } from 'lucide-react';
 import {
   AUTH_KEY,
@@ -20,9 +22,28 @@ interface AppSidebarProps {
   activeRoute?: SidebarRoute;
 }
 
-export default function AppSidebar({ activeRoute = 'documents' }: AppSidebarProps) {
+/**
+ * Sidebar principal do painel autenticado.
+ *
+ * Renderiza três peças numa Fragment:
+ *   1. Hamburger trigger fixed (só <lg) para abrir o drawer mobile.
+ *   2. Aside `fixed` à esquerda ocupando 260px (só ≥lg).
+ *   3. Overlay + drawer `fixed` que aparece quando aberto (só <lg).
+ *
+ * O componente se auton-posiciona via `fixed`, então o parent na página
+ * do painel só precisa de um `<main>` com `lg:pl-[260px]` para reservar
+ * espaço para a sidebar desktop sem usar grid column tricks.
+ */
+export default function AppSidebar({
+  activeRoute = 'documents',
+}: AppSidebarProps) {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  function closeDrawer() {
+    setIsOpen(false);
+  }
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -39,11 +60,16 @@ export default function AppSidebar({ activeRoute = 'documents' }: AppSidebarProp
     function onStorage(e: StorageEvent) {
       if (e.key === AUTH_KEY) refresh();
     }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setIsOpen(false);
+    }
     window.addEventListener('auth-change', refresh);
     window.addEventListener('storage', onStorage);
+    window.addEventListener('keydown', onKey);
     return () => {
       window.removeEventListener('auth-change', refresh);
       window.removeEventListener('storage', onStorage);
+      window.removeEventListener('keydown', onKey);
     };
   }, []);
 
@@ -54,8 +80,8 @@ export default function AppSidebar({ activeRoute = 'documents' }: AppSidebarProp
 
   if (!hydrated || !user) return null;
 
-  return (
-    <aside className="sticky top-20 flex max-h-[calc(100vh-5rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+  const SidebarBody = (
+    <>
       <div className="border-b border-slate-200 p-5">
         <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-sm">
@@ -80,6 +106,7 @@ export default function AppSidebar({ activeRoute = 'documents' }: AppSidebarProp
               ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-100'
               : 'text-slate-700 hover:bg-slate-100'
           }`}
+          onClick={closeDrawer}
         >
           <FileText size={16} />
           Documentos
@@ -91,6 +118,7 @@ export default function AppSidebar({ activeRoute = 'documents' }: AppSidebarProp
               ? 'bg-brand-700 text-white ring-1 ring-brand-700'
               : 'bg-brand-600 text-white hover:bg-brand-700'
           }`}
+          onClick={closeDrawer}
         >
           <Plus size={16} />
           Novo Documento
@@ -121,6 +149,52 @@ export default function AppSidebar({ activeRoute = 'documents' }: AppSidebarProp
           Sair da conta
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* 1. Hamburger trigger — só mobile */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
+        className="fixed left-4 top-4 z-40 grid h-11 w-11 place-items-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-md transition hover:bg-slate-50 active:scale-95 lg:hidden"
+        aria-label="Abrir menu de navegação"
+      >
+        <Menu size={22} />
+      </button>
+
+      {/* 2. Sidebar desktop — fixed à esquerda, ≥lg */}
+      <aside className="fixed left-0 top-0 z-30 hidden h-[100dvh] w-[260px] flex-col overflow-hidden border-r border-slate-200 bg-white shadow-sm lg:flex">
+        {SidebarBody}
+      </aside>
+
+      {/* 3. Drawer mobile — só aparece quando aberto, <lg */}
+      {isOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"
+            onClick={closeDrawer}
+            aria-hidden="true"
+          />
+          <aside
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu de navegação"
+            className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col overflow-hidden border-r border-slate-200 bg-white shadow-2xl lg:hidden"
+          >
+            <button
+              type="button"
+              onClick={closeDrawer}
+              className="absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+              aria-label="Fechar menu"
+            >
+              <X size={20} />
+            </button>
+            {SidebarBody}
+          </aside>
+        </>
+      )}
+    </>
   );
 }

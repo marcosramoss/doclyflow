@@ -9,11 +9,14 @@ const isEdit = Boolean(editId);
 
 <Layout
   title={isEdit ? 'Editar Documento · Doclify' : 'Novo Documento · Doclify'}
+  hideChrome
 >
-  <div class="mx-auto grid max-w-7xl items-start gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:grid-cols-[260px_1fr]">
+  <div class="min-h-screen">
     <AppSidebar client:only="react" activeRoute="new" />
-    <main class="min-w-0">
-      <RequirementsForm client:load documentId={editId} />
+    <main class="min-w-0 lg:pl-[260px]">
+      <div class="mx-auto max-w-[1440px] px-4 pt-20 pb-8 sm:px-6 sm:pt-24 sm:pb-10 lg:pt-10">
+        <RequirementsForm client:load documentId={editId} />
+      </div>
     </main>
   </div>
 </Layout>

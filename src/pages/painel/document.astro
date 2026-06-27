@@ -9,11 +9,13 @@ import AppSidebar from '../../react/AppSidebar.tsx';
 // dinâmico passa para o React, mantendo o build como cliente estático.
 ---
 
-<Layout title="Documento · Doclify">
-  <div class="mx-auto grid max-w-7xl items-start gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:grid-cols-[260px_1fr]">
+<Layout title="Documento · Doclify" hideChrome>
+  <div class="min-h-screen">
     <AppSidebar client:only="react" activeRoute="documents" />
-    <main class="min-w-0">
-      <DocumentView client:load />
+    <main class="min-w-0 lg:pl-[260px]">
+      <div class="mx-auto max-w-[1440px] px-4 pt-20 pb-8 sm:px-6 sm:pt-24 sm:pb-10 lg:pt-10">
+        <DocumentView client:load />
+      </div>
     </main>
   </div>
 </Layout>

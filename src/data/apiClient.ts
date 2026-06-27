@@ -3,8 +3,12 @@
 // =============================================================================
 // Camada fina sobre fetch que:
 //   - Injeta Bearer token automaticamente a partir do storage informado
-//   - Trata 401 limpando o storage + disparando onUnauthorized
 //   - Converte erros HTTP em ApiError tipado (status + message + details)
+//
+// Nota: NÃO limpamos o storage automaticamente em 401. Isso cascateava para
+// outros componentes (AppSidebar sumia mid-flight) e quebrava navegações
+// futuras (próxima página redirecionava para /login). 401 é tratado pelo
+// caller — apresentados na UI com CTA de re-login.
 //
 // Singleton (`api`) é exposto por src/data/api.ts para evitar ciclo de imports.
 // =============================================================================
@@ -50,11 +54,10 @@ export interface ApiClient {
 export interface ApiClientConfig {
   baseUrl: string;
   storage: AuthStorage;
-  onUnauthorized?: () => void;
 }
 
 export function createApiClient(config: ApiClientConfig): ApiClient {
-  const { baseUrl, storage, onUnauthorized } = config;
+  const { baseUrl, storage } = config;
   const base = baseUrl.replace(/\/+$/, '');
 
   async function request<T>(
@@ -91,10 +94,10 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
     }
 
     if (!res.ok) {
-      if (res.status === 401) {
-        storage.clear();
-        onUnauthorized?.();
-      }
+      // Não limpamos o storage em 401 aqui: isso cascateava para outros
+      // componentes (sidebar sumia mid-flight) e quebrava navegações futuras
+      // (storage vazio → next page redirecionava para /login). 401 deve ser
+      // um erro tratável pelo caller — exibimos na UI com CTA de re-login.
       const errBody =
         parsed && typeof parsed === 'object'
           ? (parsed as { error?: string; details?: unknown })
