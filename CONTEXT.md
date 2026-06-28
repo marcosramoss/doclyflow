@@ -78,11 +78,8 @@ doclyflow/
 │  │  ├─ routes.php                 # tabela de endpoints (sem /api/technologies)
 │  │  └─ Controllers/{HealthController,AuthController,DocumentsController}.php
 │  ├─ sql/
-│  │  ├─ schema.sql                 # canonical DROP+CREATE (estado OAuth-only, com `technologies` TEXT)
-│  │  └─ migrations/
-│  │     ├─ 0001_oauth_columns.sql  # bridge não-destrutivo (somente leitura)
-│  │     └─ 0004_documents_technologies_text.sql  # adiciona `documents.technologies` (CSV), dropa catálogo legado
-│  ├─ bin/{migrate,seed}.php        # CLI PHP
+│  │  └─ schema.sql                 # canonical DROP+CREATE (OAuth-only users + documents.technologies TEXT)
+│  ├─ bin/{migrate,seed}.php        # CLI PHP (migrate aplica schema.sql; seed popula demo user)
 │  ├─ .env.example                  # FRONTEND_ORIGIN, DB_*, GOOGLE_CLIENT_ID, etc.
 │  └─ .gitignore
 └─ src/                             # Frontend Astro+React
@@ -119,7 +116,7 @@ doclyflow/
       └─ markdownGenerator.ts       # .md estruturado (título, stack, requisitos numerados)
 ```
 
-> **Não existem mais** `src/data/technologiesCatalog.ts` nem as migrations `0002_*/0003_*` (catálogo cancelado — ver §15).
+> **Não existem mais** `src/data/technologiesCatalog.ts`, o diretório `api/sql/migrations/` (com `0001_oauth_columns.sql` e `0004_documents_technologies_text.sql`), nem o script `api/bin/migrate-oauth.php`. Evoluções antigas estão consolidadas em `api/sql/schema.sql` (canônico único).
 
 ---
 
@@ -252,19 +249,7 @@ php -S 127.0.0.1:8080 -t api/public
 - `updated_at` em `documents` tem `ON UPDATE CURRENT_TIMESTAMP`, mas o controller **também** seta `gmdate(...)` explicitamente para garantir comportamento previsível.
 - IDs gerados como `doc-<hex8>` e `req-<hex6>` (legíveis + únicos).
 
-> **Migrations:**
-> - `api/sql/schema.sql` é o **canônico DROP+CREATE** para fresh installs e full-DB resets. Reflete o estado OAuth-only **sem** a coluna `technologies` (snapshot pré-R6 — ainda não foi atualizado).
-> - `api/sql/migrations/0001_oauth_columns.sql` é o bridge **não-destrutivo** para upgrades de installs legados pré-OAuth.
-> - `api/sql/migrations/0004_documents_technologies_text.sql` adiciona `documents.technologies` (CSV) e dropa qualquer artefato legado de catálogo (`document_technologies`, `technologies`, `other_technology`) se existirem.
->
-> **Sequência correta para fresh install:**
-> ```bash
-> "C:\xampp\mysql\bin\mysql.exe" -uroot doclyflow < api/sql/schema.sql
-> "C:\xampp\mysql\bin\mysql.exe" -uroot doclyflow < api/sql/migrations/0004_documents_technologies_text.sql
-> ```
-> `schema.sql` e a `0001` NUNCA devem rodar em sequência — o primeiro já contém o estado pós-migration-0001.
->
-> ⚠️ **Pendência:** propagar a coluna `technologies TEXT` ao `schema.sql` para alinhar canônico e migrations; até lá a coluna nasce via `0004`.
+> **Schema:** há **um único arquivo canônico** — `api/sql/schema.sql` (DROP+CREATE idempotente). Ele incorpora o estado OAuth-only **e** a coluna `documents.technologies TEXT` (CSV, NULL por default). Os arquivos `0001_oauth_columns.sql`, `0004_documents_technologies_text.sql` e `bin/migrate-oauth.php` foram consolidados nas próprias definições de tabela — não há mais migrations pontuais a aplicar. Quando o schema precisar evoluir com dados em prod (futuras colunas não-droppables), reintroduzir runner versionado + tabela de tracking de migrations.
 
 ### 6.4 Autenticação Google OAuth
 
@@ -303,7 +288,7 @@ php -S 127.0.0.1:8080 -t api/public
 
 - **Validação do ID token via `/tokeninfo`** — uma chamada de rede por login. Migrar para verificação local via JWKS (`firebase/php-jwt` ou Google Auth Library) quando o volume justificar.
 - **CSV em `documents.technologies`** — nomes que contenham vírgula (ex.: "Vue.js, Next.js") quebram no split. Trade-off aceito na simplificação do R6; workaround futuro = trocar para `JSON` nativo do MySQL.
-- **Sem versionamento de schema formal** — `schema.sql` canônico + `migrations/` pontuais. Migrador versionado (Phinx / Doctrine) é "próximo passo".
+- **Sem versionamento de schema formal** — `schema.sql` é o canônico único para fresh installs. Migrador versionado (Phinx / Doctrine / tabela de tracking própria) será reintroduzido quando começar a haver evolução aditiva em banco não-vazio.
 - **Single-process** — sem lock em tokens; sob concorrência extrema dois logouts simultâneos podem ambos serem nonce-OK.
 - **N+1 no list** — `DocumentsController::index` faz 1 query por documento para carregar `requirements`. Refatorar para JOIN/IN quando volume crescer.
 
@@ -419,9 +404,8 @@ echo "PUBLIC_API_URL=http://localhost/api" > .env
 cp api/.env.example api/.env
 # editar GOOGLE_CLIENT_ID/SECRET + credenciais DB + FRONTEND_ORIGIN
 
-# 3. Backend (schema canônico + migration 0004 para a coluna `technologies`)
+# 3. Backend (schema canônico — schema.sql já inclui OAuth-only + technologies TEXT)
 "C:\xampp\mysql\bin\mysql.exe" -uroot doclyflow < api/sql/schema.sql
-"C:\xampp\mysql\bin\mysql.exe" -uroot doclyflow < api/sql/migrations/0004_documents_technologies_text.sql
 
 # 4. Dev (dois terminais) ou XAMPP
 php -S 127.0.0.1:8080 -t api/public         # API em :8080 (dev)
@@ -485,18 +469,11 @@ bin\deploy-xampp.bat                    :: build + sync + smoke tests
 
 Primeiro login com sua conta Google — você será auto-registrado (vinculado por `google_sub`). Configure origens autorizadas no GCP Cloud Console (`http://localhost` + `http://127.0.0.1`).
 
-### Migrações incrementais (preservar dados)
-```bash
-# Adiciona coluna `technologies` (CSV) e dropa catálogo legado se existir.
-# OBRIGATÓRIA para fresh installs (o schema.sql canônico ainda não inclui essa coluna).
-"C:\xampp\mysql\bin\mysql.exe" -uroot doclyflow < api\sql\migrations\0004_documents_technologies_text.sql
-```
-
 ---
 
 ## 15. Histórico de Mudanças Recentes
 
-- **R6 — Simplificação da Stack Tecnológica**: Picker de stack reformulado como **lista fixa de 14 nomes** (React, Vue.js, Next.js, Tailwind CSS, Node.js, TypeScript, PHP, Python, MySQL, PostgreSQL, Redis, Docker, GitHub Actions, MongoDB) + checkbox "Outra (especificar)" que revela input de texto livre. Persistido como `string[]` em `documents.technologies TEXT` (CSV). Migration `0004_documents_technologies_text.sql` adiciona a coluna + dropa o catálogo legado (`technologies`, `document_technologies`, `other_technology` se existirem). Rota `GET /api/technologies` removida. Arquivos `src/data/technologiesCatalog.ts` e migrations `0002_*`/`0003_*` apagados.
+- **R6 — Simplificação da Stack Tecnológica**: Picker de stack reformulado como **lista fixa de 14 nomes** (React, Vue.js, Next.js, Tailwind CSS, Node.js, TypeScript, PHP, Python, MySQL, PostgreSQL, Redis, Docker, GitHub Actions, MongoDB) + checkbox "Outra (especificar)" que revela input de texto livre. Persistido como `string[]` em `documents.technologies TEXT` (CSV). Conteúdo da antiga migration `0004_documents_technologies_text.sql` consolidado em `schema.sql`. Rota `GET /api/technologies` removida. Arquivos `src/data/technologiesCatalog.ts`, migrations `0002_*`/`0003_*`/`0004_*.sql` e o script `migrate-oauth.php` apagados.
 
 - **R6.1 — Sidebar sem botão redundante**: Removido o botão "+ Novo Documento" da `AppSidebar` (a CTA já vive no topo de `/painel/` via `DashboardTable`). Mantido o link "Documentos" + bloco de perfil + Sair.
 
@@ -506,7 +483,7 @@ Primeiro login com sua conta Google — você será auto-registrado (vinculado p
 
 - **R5 — Google OAuth + Painel (XAMPP-friendly)**:
   - Substituição completa da autenticação por Google Identity Services + verificação do ID token via `oauth2.googleapis.com/tokeninfo` (Google aud check, `exp`, `email_verified`).
-  - Migration `api/sql/migrations/0001_oauth_columns.sql`: `users` recebe `google_sub VARCHAR(255) NOT NULL UNIQUE` + `picture VARCHAR(512) NULL`, perde `password_hash`. Aplicada na dev DB; `schema.sql` canônico agora reflete o estado OAuth-only (idempotente DROP+CREATE).
+  - Schema consolidado em `api/sql/schema.sql`: `users` recebe `google_sub VARCHAR(255) NOT NULL UNIQUE` + `picture VARCHAR(512) NULL`, perde `password_hash` (era o conteúdo da antiga `0001_oauth_columns.sql`, agora absorvido no arquivo canônico). DROP+CREATE idempotente — `bin/migrate.php` aplica em qualquer banco vazio com um único comando.
   - Sidebar/Header/form rebranded: "RequisitaApp" → **Doclyflow**; "Acessar Dashboard" → "Acessar Painel"; "Workspace" → "Painel".
   - **Rename de rota `/dashboard` → `/painel`** — XAMPP 8.x serve um Alias `/dashboard` que hijackeia e exibe o painel Phoenicium dele. Renomear a pasta + URL refs evita ter que mexer no Apache.
   - **Rota `/dashboard/[id]` (SSR) → `/painel/document` (estática com `?id=`)** — remove dependência efetiva do adapter `@astrojs/node`. Build volta a ser 100% estático.

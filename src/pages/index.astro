@@ -115,8 +115,14 @@ const steps = [
           gere um PDF profissional pronto para enviar ao seu cliente.
         </p>
         <div class="mt-8 flex flex-wrap items-center gap-3">
+          <!-- CTA principal: vai direto para /login com `?next=/painel/` em vez
+               de /painel. Evita o duplo redirect visível (painel -> login) que
+               acontecia via guarda do AppSidebar quando o user estava deslogado.
+               O LoginForm já redireciona para o `next` se o user JÁ estiver
+               autenticado, então logados caem direto na lista de documentos. -->
           <a
             href="/painel"
+            data-cta-auth-gate="/login?next=/painel"
             class="group inline-flex items-center gap-2 rounded-md bg-brand-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98]"
           >
             Comece agora
@@ -295,12 +301,75 @@ const steps = [
     subtitle="Recursos pensados para analistas, product managers e desenvolvedores que precisam documentar com agilidade."
   />
 
-  <!-- HOW IT WORKS — delegated to <StepsTimeline /> component -->
+  <!-- Mesma estratégia do CTA "Comece agora" do hero: href real em
+       `/painel/novo` (alvo legítimo) + `data-cta-auth-gate` apontando para
+       o caminho `/login?next=...` que o script inline usa quando não há
+       sessão. Sem JS, o AppSidebar continua protegendo `/painel/novo`. -->
   <StepsTimeline
     steps={steps}
     badge="Como funciona"
     title="Em três passos você tem seu documento pronto"
     subtitle="Sem curva de aprendizado. Sem complicação."
-    cta={{ text: "Começar agora", href: "/painel/novo" }}
+    cta={{ text: "Começar agora", href: "/painel/novo", authGate: "/login?next=/painel/novo" }}
   />
 </Layout>
+
+<!--
+  Inline pre-auth para CTAs da landingpage.
+
+  Para qualquer <a> com `data-cta-auth-gate="...", o script intercepta o
+  clique e decide o destino FINAL ANTES da navegação começar:
+
+    • logado (token em localStorage)        → segue o href nativo (sem
+                                              flicker do /login).
+    • deslogado                              → preventDefault + navega para
+                                              `data-cta-auth-gate` (sem o
+                                              flicker de pisar em /painel).
+    • sem JS                                 → segue o href; o guard do
+                                              AppSidebar assume e joga o
+                                              usuário para /login?next=…
+
+  Por que inline (não módulo): esta página é 100% estática e o handler
+  precisa rodar ANTES do browser terminar de montar a ilha React — script
+  inline executa na fase de parsing, antes do `DOMContentLoaded` da ilha.
+  Com `{ capture: true }` ganhamos prioridade sobre qualquer outro handler
+  registrado por React/Astro. Modifier keys (Ctrl/Cmd/Shift/middle-click)
+  são preservadas — só interceptamos clicks "puros" do botão esquerdo.
+
+  Mantemos a chave `doclyflow:auth:v1` em sincronia com `storage.ts`. Qualquer
+  alteração no schema do storage exige atualizar este script também.
+-->
+<script is:inline>
+  (function () {
+    var STORAGE_KEY = 'doclyflow:auth:v1';
+    function isAuthed() {
+      try {
+        return !!window.localStorage.getItem(STORAGE_KEY);
+      } catch (_) {
+        return false;
+      }
+    }
+    document.addEventListener(
+      'click',
+      function (e) {
+        // Pula clicks com modifier — o usuário pediu "abrir em nova aba".
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) {
+          return;
+        }
+        var a = e.target && e.target.closest
+          ? e.target.closest('a[data-cta-auth-gate]')
+          : null;
+        if (!a) return;
+        if (isAuthed()) return; // logado: usa /painel direto, sem flicker
+        // Defensive: se algum `<a>` chegar sem `data-cta-auth-gate` definido
+        // (atributo ausente OU string vazia), abortamos e deixamos a
+        // navegação seguir o href nativo — evita `window.location.href = ''`.
+        var gate = a.getAttribute('data-cta-auth-gate');
+        if (!gate) return;
+        e.preventDefault();
+        window.location.href = gate;
+      },
+      { capture: true },
+    );
+  })();
+</script>

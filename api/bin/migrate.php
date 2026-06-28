@@ -4,14 +4,16 @@ declare(strict_types=1);
 /**
  * Doclyflow API — migrate.
  *
- * Aplica api/sql/schema.sql ao banco configurado em .env.
+ * Aplica o schema canônico (`api/sql/schema.sql`) ao banco configurado em .env.
  *
  * Estratégia:
  *  1. Tenta usar o `mysql` CLI (mais robusto para DDL).
  *  2. Se indisponível (Windows sem PATH configurado, por exemplo),
  *     faz split grosseiro em `;` e executa cada statement via PDO.
  *
- * Não é migrador versão-aware — para MVP um único schema.sql é suficiente.
+ * O schema é DROP+CREATE idempotente: re-executar não tem efeito colateral
+ * além de wipar dados. Não há runner versionado; quando o schema precisar
+ * evoluir com dados em prod, reintroduzir migration tracking table + runner.
  */
 
 require __DIR__ . '/../src/bootstrap.php';

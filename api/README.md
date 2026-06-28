@@ -79,7 +79,7 @@ GOOGLE_CLIENT_SECRET=GOCSPX-...
 # 1. Aplicar schema
 php api/bin/migrate.php
 
-# 2. Popular dados de teste (demo@requisita.app / demo1234)
+# 2. Popular dados de teste (cria demo@doclyflow.com.br, OAuth-only)
 php api/bin/seed.php
 
 # 3. Subir o servidor de desenvolvimento
@@ -157,6 +157,3 @@ Toda resposta de erro segue o formato:
 * Refresh tokens (rotacionar antes da expiração).
 * `composer require` Symfony Console + Doctrine Migrations para schema versionado.
 * Rate limiting e logs estruturados.
-> Bancos legados (pré-OAuth): rode `php api/bin/migrate-oauth.php` após o
-> `migrate.php` para adicionar `google_sub`/`picture` e remover `password_hash`
-> de forma idempotente.

@@ -82,12 +82,6 @@ mysql> exit
 "C:\xampp\php\php.exe" "C:\xampp\htdocs\api\bin\seed.php"
 ```
 
-Para upgrade de banco pré-OAuth (preservando usuários reais):
-
-```bash
-"C:\xampp\php\php.exe" "C:\xampp\htdocs\api\bin\migrate-oauth.php"
-```
-
 ## 4. Apache vhost
 
 Siga os passos em `deploy/xampp-httpd-doclyflow.conf`:

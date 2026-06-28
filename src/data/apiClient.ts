@@ -77,8 +77,24 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
         method,
         headers,
         body: body !== undefined ? JSON.stringify(body) : undefined,
+        // `mode: 'cors'` explícito: distingue erros de CORS (preflight
+        // bloqueado) de erros puramente de rede no DevTools/console —
+        // ambos caem no mesmo TypeError, mas o marcador ajuda a distinguir
+        // durante análise. `credentials: 'omit'` porque só usamos Bearer,
+        // não cookies — alivia regras extras do navegador.
+        mode: 'cors',
+        credentials: 'omit',
       });
     } catch (err) {
+      // Refugia a causa real no console — em produção, o `alert`/"snackbar"
+      // consome o erro com mensagem amigável e o usuário não tem como
+      // inspecionar. O stack de CORS / DNS / AdBlocker fica acessível
+      // no DevTools Network/Console.
+      const target = typeof console !== 'undefined' ? console : null;
+      target?.error?.(
+        `[Doclyflow] Network error contacting ${method} ${base}${path}`,
+        err,
+      );
       const msg = err instanceof Error ? err.message : 'Erro de rede';
       throw new ApiError(0, `Não foi possível contatar o servidor (${msg})`, err);
     }

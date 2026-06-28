@@ -1,23 +1,39 @@
 -- =============================================================================
 -- Doclyflow API — canonical schema (MySQL 8)
 -- =============================================================================
--- ⚠️ NEVER run this file AND api/sql/migrations/0001_oauth_columns.sql
---   in sequence. This file already encodes the post-0001 end-state; running
---   0001 on top will fail with ER_DUPLICATE_FIELDNAME / ER_DUP_KEYNAME.
+-- Single source of truth. This file encodes the **final** state of every
+-- application table after the project's schema evolution:
 --
--- This file is canonical for FRESH installs and full-DB resets. It DROPS
--- the four application tables and re-creates them in authorization order.
+--   v0  Initial schema. `users` had `password_hash` (NOT NULL); no OAuth.
+--   v1  ─▶ Migration 0001_oauth_columns.sql (now folded in here)
+--        `users.google_sub VARCHAR(255) NOT NULL UNIQUE` +
+--        `users.picture VARCHAR(512) DEFAULT NULL`,
+--        UNIQUE KEY uq_users_google_sub, and `password_hash` dropped.
+--        Doclyflow became 100% OAuth (Google Identity Services).
+--   v2  (0002/0003 — aborted; not in this file)
+--        Attempted a normalized tech catalog (`technologies` +
+--        `document_technologies` + `documents.other_technology`).
+--        Cancelled — see commit history if needed.
+--   v3  ─▶ Migration 0004_documents_technologies_text.sql (now folded in here)
+--        Normalized catalogue was dropped in favor of a single
+--        `documents.technologies TEXT` CSV column (NULL by default).
 --
--- For installs that already hold data, use the NON-DESTRUCTIVE bridge:
---     mysql ... < api/sql/migrations/0001_oauth_columns.sql
--- That file is READ-ONLY historical and must not be edited in lockstep
--- with future column-type changes here — it is a snapshot, not a target.
+-- DROP+CREATE strategy: this file fully wipes the four application tables
+-- before recreating them. **Apply only to FRESH installations** or when
+-- you intentionally want to reset all data — re-running WILL wipe data.
 --
--- Apply with:
+-- Apply via one of:
 --   mysql -h $DB_HOST -u $DB_USER -p$DB_PASS doclyflow < api/sql/schema.sql
---   php api/bin/migrate.php
---   -- or paste this file into your SQL editor and run.
---   USE doclyflow;  -- ensure your sqleditor session is on `doclyflow`, not `mysql`.
+--   php api/bin/migrate.php          # tries mysql CLI, falls back to PDO split
+--
+-- Re-runnable by design (`DROP IF EXISTS` + `CREATE IF NOT EXISTS` will
+-- not error), but destructive: each run truncates the application tables.
+-- Encoding: utf8mb4 / InnoDB. CHECK constraints complement FKs so invalid
+-- enum values are rejected at the database layer (not just the API).
+--
+-- Note: "v0/v1/v3" history above references columns like `password_hash`
+-- and `document_technologies` that were removed/replaced. They no longer
+-- exist in the canonical schema — kept here for context only.
 -- =============================================================================
 
 -- 1. Wipe existing objects in reverse FK dependency order.
@@ -27,17 +43,18 @@ DROP TABLE IF EXISTS user_tokens;
 DROP TABLE IF EXISTS users;
 
 -- 2. Ensure database exists with utf8mb4.
-CREATE DATABASE IF NOT EXISTS doclyflow
+CREATE DATABASE IF NOT EXISTS u390010558_doclyflow
   DEFAULT CHARACTER SET utf8mb4
   DEFAULT COLLATE utf8mb4_unicode_ci;
 
-USE doclyflow;
+USE u390010558_doclyflow;
 
 -- ----------------------------------------------------------------------------
 -- 1. users
--- Identidade estável via `google_sub` (do JWT do Google Identity Services).
--- `picture` é opcional e armazena a URL do avatar do Google.
--- `password_hash` foi removido intencionalmente (Doclyflow é 100% OAuth).
+-- Identity stable via `google_sub` (the JWT `sub` claim from Google
+-- Identity Services). `picture` holds the optional Google avatar URL.
+-- `password_hash` was intentionally removed when Doclyflow went
+-- 100% OAuth (see v1 history in header).
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
   id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -52,8 +69,8 @@ CREATE TABLE IF NOT EXISTS users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 2. user_tokens — tokens opacos, APENAS o hash SHA256 é armazenado.
---    Logout = DELETE da linha (revogação instantânea).
+-- 2. user_tokens — opaque tokens, only the SHA-256 hash is stored.
+--   Logout = DELETE the row (instant revocation).
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS user_tokens (
   id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -70,19 +87,24 @@ CREATE TABLE IF NOT EXISTS user_tokens (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 3. documents — levantamentos de requisitos do usuário.
---    status armazenado como VARCHAR com CHECK (mais fácil de evoluir que ENUM).
+-- 3. documents — requirement spec documents authored by a user.
+--   `status` as VARCHAR + CHECK (easier to evolve than ENUM).
+--   `technologies` is a free-form CSV string of tech names picked by
+--   the author (see v3 history in header). Decoded by
+--   DocumentsController::decodeTechnologies() on read. ~64KB TEXT
+--   capacity is far more than any realistic document's stack list.
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS documents (
-  id          VARCHAR(64) NOT NULL,
-  user_id     INT UNSIGNED NOT NULL,
-  title       VARCHAR(255) NOT NULL,
-  client      VARCHAR(255) NOT NULL,
-  description TEXT NOT NULL,
-  status      VARCHAR(20) NOT NULL DEFAULT 'draft',
-  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-                  ON UPDATE CURRENT_TIMESTAMP,
+  id           VARCHAR(64) NOT NULL,
+  user_id      INT UNSIGNED NOT NULL,
+  title        VARCHAR(255) NOT NULL,
+  client       VARCHAR(255) NOT NULL,
+  description  TEXT NOT NULL,
+  technologies TEXT DEFAULT NULL,
+  status       VARCHAR(20) NOT NULL DEFAULT 'draft',
+  created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                   ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_documents_user (user_id),
   KEY idx_documents_updated (updated_at),
@@ -93,7 +115,7 @@ CREATE TABLE IF NOT EXISTS documents (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- 4. requirements — itens que compõem cada documento.
+-- 4. requirements — items that compose each document.
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS requirements (
   id          VARCHAR(64) NOT NULL,

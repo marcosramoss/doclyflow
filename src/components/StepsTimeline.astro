@@ -14,7 +14,17 @@ interface Props {
   badge?: string;
   title?: string;
   subtitle?: string;
-  cta?: { text: string; href: string };
+  /**
+   * CTA exibido no final da timeline.
+   *  - `href`   → destino real (resolve também no fallback sem JS).
+   *  - `authGate` → opcional; quando presente, o script inline da
+   *                 landingpage (`[data-cta-auth-gate]`) intercepta o
+   *                 clique e joga para esse caminho caso o usuário não
+   *                 esteja autenticado, evitando o flicker
+   *                 (painel → login) que acontecia via guarda do
+   *                 AppSidebar.
+   */
+  cta?: { text: string; href: string; authGate?: string };
 }
 
 const { steps, badge, title, subtitle, cta } = Astro.props;
@@ -112,6 +122,9 @@ const { steps, badge, title, subtitle, cta } = Astro.props;
           <div class="mt-20 flex justify-center">
             <a
               href={cta.href}
+              {...(cta.authGate
+                ? { 'data-cta-auth-gate': cta.authGate }
+                : {})}
               class="group inline-flex items-center gap-2 rounded-md bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98]"
             >
               {cta.text}

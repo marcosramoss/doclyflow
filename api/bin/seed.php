@@ -26,12 +26,13 @@ try {
     exit(1);
 }
 
-$demoEmail = 'demo@requisita.app';
-// `google_sub` fixo para o usuário demo — permite que `bin/migrate-oauth.php`
-// preserve os 3 documentos-modelo em upgrades de bancos pré-OAuth e que
-// `bin/seed.php` permaneça idempotente em re-execuções.
-// Em uso real via frontend, este usuário é substituído pelo registro real do
-// Google Identity Services (sub diferente, o `UNIQUE` continua valendo).
+// Demo user fixed email reflects current Doclyflow branding.
+// O domínio @requisita.app era da marca pré-rebrand.
+$demoEmail = 'demo@doclyflow.com.br';
+// `google_sub` fixo (UUID-formatado) para o usuário demo — permite que
+// `bin/seed.php` permaneça idempotente em re-execuções (o UNIQUE em
+// `users.google_sub` continua valendo em logins reais via Google Identity
+// Services, cujos `sub` são sempre diferentes deste marcador reservado).
 $demoSub = 'seed-demo-00000000-0000-0000-0000-000000000000';
 
 echo "Seeding Doclyflow demo data...\n";
@@ -164,5 +165,5 @@ try {
 }
 
 echo "Seed completed.\n";
-echo "  User: $demoEmail (google_sub=seed-demo-…, passwordless)\n";
+echo "  User: $demoEmail (google_sub=seed-demo-…, OAuth-only)\n";
 echo "  Documents: " . count($docs) . " demo records\n";
