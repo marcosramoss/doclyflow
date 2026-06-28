@@ -17,6 +17,12 @@ interface AppSidebarProps {
 }
 
 /**
+ * Tempo da transição CSS do drawer mobile — DEVE casar com o `duration-300`
+ * aplicado em `transition-transform` / `transition-opacity` no JSX abaixo.
+ */
+const DRAWER_TRANSITION_MS = 300;
+
+/**
  * Sidebar principal do painel autenticado.
  *
  * Renderiza três peças numa Fragment:
@@ -27,6 +33,22 @@ interface AppSidebarProps {
  * O componente se auton-posiciona via `fixed`, então o parent na página
  * do painel só precisa de um `<main>` com `lg:pl-[260px]` para reservar
  * espaço para a sidebar desktop sem usar grid column tricks.
+ *
+ * ## Animação do drawer mobile
+ *
+ * O drawer nunca é desmontado durante o ciclo aberto/fechado: ele permanece
+ * no DOM (em `-translate-x-full` + `opacity-0`) de forma que a transição
+ * CSS possa tanto no ABRIR quanto no FECHAR.
+ *
+ *   • Abrir: monta com classes de "fechado", depois de 2 rAFs flipa para
+ *     `translate-x-0` / `opacity-100` — assim o navegador enxerga uma
+ *     MUDANÇA de propriedade (transform) e dispara o `transition-transform`.
+ *     Montar direto com `translate-x-0` não animaria.
+ *   • Fechar: flipa para `-translate-x-full` / `opacity-0`, espera
+ *     `DRAWER_TRANSITION_MS` e só então remove do DOM (`setIsMounted(false)`).
+ *
+ * O `useEffect` dependente de `[isOpen]` é o controlador do estado animado;
+ * as funções `openDrawer`/`closeDrawer` apenas disparam `setIsOpen`.
  */
 export default function AppSidebar({
   activeRoute = "documents",
@@ -34,10 +56,56 @@ export default function AppSidebar({
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  // Mantém drawer + overlay no DOM após fechar, até a animação terminar.
+  const [isMounted, setIsMounted] = useState(false);
+  // `false` durante o primeiro paint (drawer off-screen + overlay invisível),
+  // `true` após duplo rAF — assim a propriedade `transform` MUDA de valor
+  // e o navegador dispara a transição (mount direto com classe final não anima).
+  const [isAnimatingOpen, setIsAnimatingOpen] = useState(false);
 
   function closeDrawer() {
     setIsOpen(false);
   }
+
+  // Sincroniza a montagem do drawer + flip animado com `isOpen`.
+  useEffect(() => {
+    if (isOpen) {
+      setIsMounted(true);
+      // Duplo rAF: garante que o navegador pintou o drawer no estado
+      // FECHADO (-translate-x-full / opacity-0) antes do flip para ABERTO.
+      // Sem isso, o browser pinta direto em translate-x-0 e a transição
+      // nunca dispara (mount inicial não é "mudança" de estilo).
+      let raf1 = 0;
+      let raf2 = 0;
+      raf1 = window.requestAnimationFrame(() => {
+        raf2 = window.requestAnimationFrame(() => {
+          setIsAnimatingOpen(true);
+        });
+      });
+      return () => {
+        window.cancelAnimationFrame(raf1);
+        window.cancelAnimationFrame(raf2);
+      };
+    }
+    // Fechando: reverter classe animada primeiro; desmount só após a
+    // transição completar, para que o slide-out seja visível.
+    setIsAnimatingOpen(false);
+    const tid = window.setTimeout(
+      () => setIsMounted(false),
+      DRAWER_TRANSITION_MS,
+    );
+    return () => window.clearTimeout(tid);
+  }, [isOpen]);
+
+  // Trava scroll do body enquanto drawer está aberto (UX padrão de modal).
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -145,6 +213,8 @@ export default function AppSidebar({
         onClick={() => setIsOpen(true)}
         className="fixed left-4 top-4 z-40 grid h-11 w-11 place-items-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-md transition hover:bg-slate-50 active:scale-95 lg:hidden"
         aria-label="Abrir menu de navegação"
+        aria-expanded={isOpen}
+        aria-controls="app-sidebar-drawer"
       >
         <Menu size={22} />
       </button>
@@ -154,19 +224,27 @@ export default function AppSidebar({
         {SidebarBody}
       </aside>
 
-      {/* 3. Drawer mobile — só aparece quando aberto, <lg */}
-      {isOpen && (
+      {/* 3. Drawer mobile — fica montado enquanto animação roda:
+             off-screen (-translate-x-full) + invisível (opacity-0) quando
+             fechado, e desliza para dentro (translate-x-0 / opacity-100)
+             quando aberto. Nunca desmonta abruptamente, sempre transiciona. */}
+      {isMounted && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"
+            className={`fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${
+              isAnimatingOpen ? "opacity-100" : "pointer-events-none opacity-0"
+            }`}
             onClick={closeDrawer}
             aria-hidden="true"
           />
           <aside
+            id="app-sidebar-drawer"
             role="dialog"
             aria-modal="true"
             aria-label="Menu de navegação"
-            className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col overflow-hidden border-r border-slate-200 bg-white shadow-2xl lg:hidden"
+            className={`fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col overflow-hidden border-r border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out lg:hidden ${
+              isAnimatingOpen ? "translate-x-0" : "-translate-x-full"
+            } ${isAnimatingOpen ? "" : "pointer-events-none"}`}
           >
             <button
               type="button"
