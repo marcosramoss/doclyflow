@@ -204,7 +204,7 @@ export default function DocumentView({ documentId }: DocumentViewProps) {
 
       {/* Header do documento */}
       <header className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="h-1.5 bg-gradient-to-r from-brand-500 via-sky-500 to-violet-500" />
+        <div className="h-1.5 bg-linear-to-r from-brand-500 via-sky-500 to-violet-500" />
         <div className="px-6 py-6 sm:px-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
@@ -275,7 +275,7 @@ export default function DocumentView({ documentId }: DocumentViewProps) {
             <button
               type="button"
               onClick={handleExport}
-              className="inline-flex items-center gap-1.5 rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98]"
+              className="inline-flex items-center gap-1.5 rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98] cursor-pointer"
             >
               <FileDown size={16} />
               Exportar PDF
@@ -283,7 +283,7 @@ export default function DocumentView({ documentId }: DocumentViewProps) {
             <button
               type="button"
               onClick={handleExportMd}
-              className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 active:scale-[0.98]"
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.98] cursor-pointer"
               title="Exporta o documento em Markdown — ideal para usar como skill em uma IA"
             >
               <FileCode size={16} />
