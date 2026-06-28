@@ -1,5 +1,6 @@
 ---
 import HeaderUserMenu from "../react/HeaderUserMenu.tsx";
+import GitHubStarsBadge from "./GitHubStarsBadge.astro";
 import logoDark from "../../public/logo-dark-doclify.svg";
 ---
 
@@ -15,6 +16,14 @@ import logoDark from "../../public/logo-dark-doclify.svg";
       <span class="text-lg font-bold tracking-tight text-slate-900"> </span>
     </a>
 
-    <HeaderUserMenu client:load />
+    <div class="flex items-center gap-4">
+      <GitHubStarsBadge />
+      <!-- HeaderUserMenu fica oculto no modo open-source (login acontece no
+           hero da landing: "Comece agora" + "Entrar com Google"). Remover o
+           `class="hidden"` no wrapper restaura o botão Entrar / avatar+Sair. -->
+      <div class="hidden">
+        <HeaderUserMenu client:load />
+      </div>
+    </div>
   </div>
 </header>

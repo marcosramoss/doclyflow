@@ -153,7 +153,7 @@ export default function AppSidebar({
 
       <nav className="flex-1 space-y-1.5 p-3">
         <div className="text-[11px] uppercase tracking-wider text-slate-500 mb-4">
-          Painel
+          Navegação
         </div>
         <a
           href="/painel"

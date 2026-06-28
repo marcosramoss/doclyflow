@@ -1,0 +1,118 @@
+---
+// GitHub Stars Badge — open-source friendly CTA for the header.
+//
+// Visual variants, controlled via `PUBLIC_GITHUB_BADGE_VARIANT` (defaults
+// to "split"):
+//   - "split" (default): brand-blue two-section button. brand-600 left panel
+//     with filled star icon + "Star" label, separated brand-700 count panel
+//     with the live star count via shields.io.
+//   - "social": single shields.io `style=flat` badge colored brand-600 with
+//     the GitHub icon + star count. Most compact, brand-coherent.
+//   - "none": plain brand-600 button with star icon + "Star" label, zero
+//     shields.io dependency.
+//
+// Palette mirrors the rest of the app (src/styles/global.css):
+//   brand-600 = #2563eb (primary), brand-700 = #1d4ed8 (count panel / hover),
+//   brand-500 = #3b82f6 (focus ring).
+//
+// Always reads `PUBLIC_GITHUB_REPO` from .env (e.g.
+// `https://github.com/owner/doclify`). Falls back to a placeholder URL so
+// the build never breaks; unknown variant values also fall back to "split".
+
+const repoUrl =
+  (import.meta.env.PUBLIC_GITHUB_REPO as string | undefined)?.trim() ||
+  'https://github.com/SEU_USUARIO/doclify';
+
+const variantRaw = (
+  import.meta.env.PUBLIC_GITHUB_BADGE_VARIANT as string | undefined
+)?.trim();
+const variant: 'split' | 'social' | 'none' =
+  variantRaw === 'social' || variantRaw === 'none' ? variantRaw : 'split';
+
+const match = repoUrl.match(/github\.com\/([^/]+)\/([^/?#]+)/);
+const owner = match?.[1] ?? 'SEU_USUARIO';
+const repoRaw = match?.[2] ?? 'doclify';
+const repo = repoRaw.endsWith('.git') ? repoRaw.slice(0, -4) : repoRaw;
+
+// count panel in `split` uses the dark-step (brand-700) bg; the embedded
+// shields.io badge matches it so the count "lives" seamlessly inside.
+const splitBadge = `https://img.shields.io/github/stars/${owner}/${repo}?style=flat-square&logo=github&logoColor=white&color=1d4ed8&labelColor=1d4ed8&label=`;
+// `social` is a single brand-blue flat badge with the GitHub icon.
+const socialBadge = `https://img.shields.io/github/stars/${owner}/${repo}?style=flat&logo=github&logoColor=white&color=2563eb&labelColor=2563eb&label=`;
+const badgeAlt = `Estrelas no GitHub (${owner}/${repo})`;
+---
+
+{variant === 'social' && (
+  <a
+    href={repoUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Dar uma estrela no GitHub"
+    class="group inline-block rounded-md shadow-sm transition hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+  >
+    <img
+      src={socialBadge}
+      alt={badgeAlt}
+      class="h-6 align-middle"
+      loading="lazy"
+      decoding="async"
+    />
+  </a>
+)}
+
+{variant === 'none' && (
+  <a
+    href={repoUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Dar uma estrela no GitHub"
+    class="group inline-flex items-center gap-2 rounded-md border border-white/15 bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      stroke="none"
+      aria-hidden="true"
+    >
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" />
+    </svg>
+    Star
+  </a>
+)}
+
+{variant === 'split' && (
+  <a
+    href={repoUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Dar uma estrela no GitHub"
+    class="group inline-flex items-stretch overflow-hidden rounded-md border border-white/15 bg-brand-600 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+  >
+    <span class="inline-flex items-center gap-2 bg-brand-600 px-3.5 py-2 transition group-hover:bg-brand-700">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        stroke="none"
+        aria-hidden="true"
+      >
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" />
+      </svg>
+      Star
+    </span>
+    <span class="inline-flex min-w-[2.5rem] items-center justify-center border-l border-white/20 bg-brand-700 px-3.5 py-2 tabular-nums transition group-hover:bg-brand-800">
+      <img
+        src={splitBadge}
+        alt={badgeAlt}
+        class="h-5 align-middle"
+        loading="lazy"
+        decoding="async"
+      />
+    </span>
+  </a>
+)}

@@ -5,11 +5,10 @@ import {
   FileText,
   Layers,
   Download,
-  ShieldCheck,
-  Zap,
+  Cloudy,
+  LogIn,
   CheckCircle2,
   Search,
-  Plus,
 } from "lucide-react";
 
 const features = [
@@ -25,13 +24,13 @@ const features = [
   },
   {
     icon: Download,
-    title: "Exportação em PDF",
-    body: "PDF profissional gerado no próprio navegador, pronto para enviar ao cliente.",
+    title: "Exporte em PDF ou Markdown",
+    body: "PDF profissional pronto para enviar ao cliente, ou .md estruturado para usar como contexto em uma IA.",
   },
   {
-    icon: ShieldCheck,
-    title: "Tudo persiste local",
-    body: "Seus documentos ficam salvos no navegador via localStorage. Sem backend, sem login.",
+    icon: Cloudy,
+    title: "Tudo salvo na nuvem",
+    body: "Documentos persistidos no servidor e vinculados à sua conta — acesse de qualquer navegador.",
   },
   {
     icon: Search,
@@ -39,9 +38,9 @@ const features = [
     body: "Encontre rapidamente documentos por título, cliente ou status.",
   },
   {
-    icon: Zap,
-    title: "Performance primeiro",
-    body: "Construído com Astro + React em ilhas interativas para carregar quase instantaneamente.",
+    icon: LogIn,
+    title: "Login com Google",
+    body: "Sem senhas extras — entre com sua conta Google e seu workspace já está pronto para usar.",
   },
 ];
 
@@ -64,7 +63,7 @@ const steps = [
 ];
 ---
 
-<Layout title="Doclify — Levantamentos de Requisitos Profissionais em PDF">
+<Layout title="Doclify — Levantamentos de Requisitos Profissionais em PDF e Markdown">
   <!-- HERO -->
   <section class="relative overflow-hidden">
     <div
@@ -112,7 +111,7 @@ const steps = [
             href="/painel"
             class="group inline-flex items-center gap-2 rounded-md bg-brand-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98]"
           >
-            Acessar Painel
+            Comece agora
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -130,27 +129,38 @@ const steps = [
             </svg>
           </a>
           <a
-            href="/painel/novo"
+            href="/login?next=/painel/novo"
             class="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100"
           >
-            <Plus size={16} />
-            Criar Documento
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 48 48"
+              aria-hidden="true"
+            >
+              <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+              <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+              <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+              <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+            </svg>
+            Entrar com Google
           </a>
         </div>
         <div
           class="mt-10 grid grid-cols-3 gap-6 border-t border-slate-200 pt-6 text-sm text-slate-500"
         >
           <div>
-            <div class="text-xl font-bold text-slate-900">100%</div>
-            <div>Client-side</div>
+            <div class="text-xl font-bold text-slate-900">Cloud</div>
+            <div>Sempre na nuvem</div>
           </div>
           <div>
-            <div class="text-xl font-bold text-slate-900">PDF</div>
-            <div>Exportação nativa</div>
+            <div class="text-xl font-bold text-slate-900">Google</div>
+            <div>Login seguro</div>
           </div>
           <div>
-            <div class="text-xl font-bold text-slate-900">0</div>
-            <div>Configurações</div>
+            <div class="text-xl font-bold text-slate-900">PDF · MD</div>
+            <div>Exporte como quiser</div>
           </div>
         </div>
       </div>
@@ -314,7 +324,7 @@ const steps = [
           Em três passos você tem seu documento pronto
         </h2>
         <p class="mt-4 text-lg text-slate-600">
-          Sem curva de aprendizado. Sem login. Sem complicação.
+          Sem curva de aprendizado. Sem complicação.
         </p>
       </div>
       <ol
