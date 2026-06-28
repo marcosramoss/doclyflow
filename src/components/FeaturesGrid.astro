@@ -11,13 +11,110 @@ interface Props {
   features: FeatureItem[];
   title?: string;
   subtitle?: string;
+  /**
+   * Posições de "highlight squares" no grid (em unidades de células 40x40).
+   * Default = DEFAULT_HIGHLIGHT_SQUARES (6 pontos espalhados).
+   * Passe `[]` para desabilitar; passe uma array custom para custom layout.
+   */
+  highlights?: [number, number][];
 }
 
-const { features, title, subtitle } = Astro.props;
+// Highlight squares: default positions determinísticas com brand-500/12
+// para criar pontos de interesse visual. O `squares` prop do snippet
+// Aceternity foi promovido para Props opcional — permite que consumers
+// (pricing, about, etc.) sobreponham o layout sem duplicar a string.
+// Default = 6 posições espalhadas, longe do centro onde os cards vivem.
+//
+// IMPORTANTE: declarado ANTES do destructuring do Astro.props porque
+// é usado como valor default da prop `highlights` (TDZ do `const`).
+const DEFAULT_HIGHLIGHT_SQUARES: [number, number][] = [
+  [2, 4],   // upper-left
+  [15, 3],  // top-center
+  [28, 6],  // upper-right
+  [8, 18],  // lower-left
+  [20, 22], // lower-center
+  [32, 16], // middle-right
+];
+
+// Grid pattern: 40x40 cells com linhas slate-300/40 (sutis sobre fundo
+// branco). Os offsets (x=-1, y=-1) empurram a primeira célula para fora
+// da viewport, eliminando a borda dura na esquerda/topo.
+const { features, title, subtitle, highlights = DEFAULT_HIGHLIGHT_SQUARES } =
+  Astro.props;
 ---
 
-<section class="relative border-t border-slate-200 bg-white py-24">
-  <div class="mx-auto max-w-7xl px-6">
+<section
+  class="relative overflow-hidden border-t border-slate-200 bg-white py-24"
+  style="content-visibility: auto; contain-intrinsic-size: auto 720px;"
+>
+  <!--
+    Grid pattern background (estático, experimental). Inspirado no
+    "GridPattern" do Aceternity UI, mas reescrito em SVG inline + Astro:
+      - sem React island, sem `useId` (Astro já renderiza HTML estático);
+      - sem `@/lib/utils` (substituímos `cn()` por classes Tailwind diretas);
+      - sem `"use client"` (diretiva do Next.js, sem efeito em Astro);
+    Características preservadas do snippet:
+      - <pattern> com patternUnits="userSpaceOnUse" → grade se repete
+        continuamente independente do tamanho do container.
+      - aria-hidden + pointer-events-none + z-0 abaixo do conteúdo (z-10).
+  -->
+  <div aria-hidden="true" class="pointer-events-none absolute inset-0 z-0">
+    <svg
+      class="absolute inset-0 h-full w-full text-slate-300"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <pattern
+          id="features-grid-pattern"
+          x="-1"
+          y="-1"
+          width="40"
+          height="40"
+          patternUnits="userSpaceOnUse"
+        >
+          <path
+            d="M40 .5H.5V40"
+            fill="none"
+            stroke="currentColor"
+            stroke-opacity="0.4"
+            stroke-width="1"
+          />
+        </pattern>
+      </defs>
+
+      {/* Grid lines layer */}
+      <rect
+        width="100%"
+        height="100%"
+        fill="url(#features-grid-pattern)"
+        stroke-width="0"
+      />
+
+      {/* Highlighted squares layer (decorative points of interest).
+        * Cor via `var(--color-brand-500)` — o token é definido no
+        * `@theme {}` do global.css (Tailwind v4), então a cor segue
+        * automaticamente se o brand-500 for alterado lá. Isso evita
+        * o hardcoded hex e contorna a fragilidade do arbitrary opacity
+        * `fill-brand-500/[0.12]` que o Tailwind v4 não preservou
+        * no build output. */}
+      <g style="fill: var(--color-brand-500); fill-opacity: 0.12;">
+        {
+          highlights.map(([x, y]) => (
+            <rect
+              x={x * 40 + 1}
+              y={y * 40 + 1}
+              width="39"
+              height="39"
+              stroke-width="0"
+            />
+          ))
+        }
+      </g>
+    </svg>
+  </div>
+
+  <div class="relative z-10 mx-auto max-w-7xl px-6">
     {(title || subtitle) && (
       <div class="mx-auto max-w-2xl text-center">
         {title && (
