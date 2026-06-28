@@ -1,11 +1,6 @@
-import { useEffect, useState } from 'react';
-import {
-  FileText,
-  LogOut,
-  LayoutGrid,
-  Menu,
-  X,
-} from 'lucide-react';
+import { useEffect, useState } from "react";
+import LogoDark from "../../public/logo-dark-doclify.svg";
+import { FileText, LogOut, Menu, X } from "lucide-react";
 import {
   AUTH_KEY,
   getCurrentUser,
@@ -13,9 +8,9 @@ import {
   initialsOf,
   logout,
   type CurrentUser,
-} from '../data/auth';
+} from "../data/auth";
 
-export type SidebarRoute = 'documents' | 'new' | 'view';
+export type SidebarRoute = "documents" | "new" | "view";
 
 interface AppSidebarProps {
   activeRoute?: SidebarRoute;
@@ -34,7 +29,7 @@ interface AppSidebarProps {
  * espaço para a sidebar desktop sem usar grid column tricks.
  */
 export default function AppSidebar({
-  activeRoute = 'documents',
+  activeRoute = "documents",
 }: AppSidebarProps) {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [hydrated, setHydrated] = useState(false);
@@ -60,21 +55,21 @@ export default function AppSidebar({
       if (e.key === AUTH_KEY) refresh();
     }
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setIsOpen(false);
+      if (e.key === "Escape") setIsOpen(false);
     }
-    window.addEventListener('auth-change', refresh);
-    window.addEventListener('storage', onStorage);
-    window.addEventListener('keydown', onKey);
+    window.addEventListener("auth-change", refresh);
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("keydown", onKey);
     return () => {
-      window.removeEventListener('auth-change', refresh);
-      window.removeEventListener('storage', onStorage);
-      window.removeEventListener('keydown', onKey);
+      window.removeEventListener("auth-change", refresh);
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("keydown", onKey);
     };
   }, []);
 
   async function handleLogout() {
     await logout();
-    window.location.href = '/';
+    window.location.href = "/";
   }
 
   if (!hydrated || !user) return null;
@@ -82,28 +77,22 @@ export default function AppSidebar({
   const SidebarBody = (
     <>
       <div className="border-b border-slate-200 p-5">
-        <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-lg bg-linear-to-br from-brand-500 to-brand-700 text-white shadow-sm">
-            <LayoutGrid size={18} />
-          </span>
-          <div className="min-w-0">
-            <div className="truncate text-sm font-bold tracking-tight text-slate-900">
-              Doclify
-            </div>
-            <div className="text-[11px] uppercase tracking-wider text-slate-500">
-              Painel
-            </div>
-          </div>
+        <div className="flex items-center justify-center gap-3">
+          <img src={LogoDark.src} />
+          <div className="min-w-0"></div>
         </div>
       </div>
 
       <nav className="flex-1 space-y-1.5 p-3">
+        <div className="text-[11px] uppercase tracking-wider text-slate-500 mb-4">
+          Painel
+        </div>
         <a
           href="/painel"
           className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
-            activeRoute === 'documents' || activeRoute === 'view'
-              ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-100'
-              : 'text-slate-700 hover:bg-slate-100'
+            activeRoute === "documents" || activeRoute === "view"
+              ? "bg-brand-50 text-brand-700 ring-1 ring-brand-100"
+              : "text-slate-700 hover:bg-slate-100"
           }`}
           onClick={closeDrawer}
         >
@@ -114,7 +103,7 @@ export default function AppSidebar({
 
       <div className="border-t border-slate-200 p-3">
         <div className="flex items-start gap-3 rounded-lg bg-slate-50/60 p-3">
-          {user.picture && user.picture.trim() !== '' ? (
+          {user.picture && user.picture.trim() !== "" ? (
             <img
               src={user.picture}
               alt={user.name}
