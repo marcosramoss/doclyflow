@@ -1,0 +1,131 @@
+---
+import type { LucideIcon } from "lucide-react";
+
+export interface FeatureItem {
+  icon: LucideIcon;
+  title: string;
+  body: string;
+}
+
+interface Props {
+  features: FeatureItem[];
+  title?: string;
+  subtitle?: string;
+}
+
+const { features, title, subtitle } = Astro.props;
+---
+
+<section class="relative border-t border-slate-200 bg-white py-24">
+  <div class="mx-auto max-w-7xl px-6">
+    {(title || subtitle) && (
+      <div class="mx-auto max-w-2xl text-center">
+        {title && (
+          <h2
+            class="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
+          >
+            {title}
+          </h2>
+        )}
+        {subtitle && (
+          <p class="mt-4 text-lg text-slate-600">{subtitle}</p>
+        )}
+      </div>
+    )}
+
+    <div
+      data-features-root
+      class="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+    >
+      {
+        features.map((f, i) => (
+          <div
+            class="feature-card group rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-md"
+            style={`--feature-index:${i}`}
+          >
+            <span class="grid h-11 w-11 place-items-center rounded-lg bg-brand-50 text-brand-600 transition-colors group-hover:bg-brand-600 group-hover:text-white">
+              <f.icon size={20} />
+            </span>
+            <h3 class="mt-5 text-base font-semibold text-slate-900">
+              {f.title}
+            </h3>
+            <p class="mt-2 text-sm leading-relaxed text-slate-600">
+              {f.body}
+            </p>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<!--
+  Animation styles. Same pattern as <StepsTimeline>:
+  - <style is:global> for selectors that need to react to a runtime-added
+    .is-visible class on the data-features-root wrapper (set by the script
+    below).
+  - Class names (feature-card) are unique enough to avoid global collisions.
+-->
+<style is:global>
+  .feature-card {
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+      opacity 480ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 480ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 200ms ease,
+      border-color 200ms ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .feature-card {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: box-shadow 200ms ease, border-color 200ms ease;
+    }
+  }
+
+  /* Triggered when IntersectionObserver sees the grid in view.
+   * Timing math (6 features by default):
+   *   stagger:        80ms per card — 0, 80, 160, 240, 320, 400ms
+   *   card transition: 480ms   — last card finishes at 400 + 480 = 880ms
+   */
+  [data-features-root].is-visible .feature-card {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: calc(var(--feature-index, 0) * 80ms);
+  }
+</style>
+
+<!--
+  No-JS fallback: if the IntersectionObserver never runs, force cards into
+  their final visible state so the section still reads correctly.
+-->
+<noscript>
+  <style>
+    .feature-card {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  </style>
+</noscript>
+
+<script>
+  // Reveal each grid once it scrolls into view. Disconnects after first hit
+  // so the entrance plays once and never re-runs.
+  const grids = document.querySelectorAll<HTMLElement>("[data-features-root]");
+  for (const root of grids) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            io.unobserve(entry.target);
+          }
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -60px 0px" },
+    );
+    io.observe(root);
+  }
+</script>

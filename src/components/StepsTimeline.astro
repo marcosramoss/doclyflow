@@ -1,0 +1,254 @@
+---
+import { Sparkles } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+export interface TimelineStep {
+  n: number;
+  t: string;
+  d: string;
+  icon: LucideIcon;
+}
+
+interface Props {
+  steps: TimelineStep[];
+  badge?: string;
+  title?: string;
+  subtitle?: string;
+  cta?: { text: string; href: string };
+}
+
+const { steps, badge, title, subtitle, cta } = Astro.props;
+---
+
+<section class="relative overflow-hidden bg-slate-50 py-24">
+  <div
+    aria-hidden="true"
+    class="pointer-events-none absolute -top-32 left-1/4 -z-10 h-96 w-96 rounded-full bg-brand-200/30 blur-3xl"
+  >
+  </div>
+  <div
+    aria-hidden="true"
+    class="pointer-events-none absolute -bottom-32 right-1/4 -z-10 h-96 w-96 rounded-full bg-sky-200/30 blur-3xl"
+  >
+  </div>
+
+  <div class="relative mx-auto max-w-7xl px-6">
+    {(badge || title || subtitle) && (
+      <div class="mx-auto max-w-2xl text-center">
+        {badge && (
+          <span
+            class="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-white/80 px-3 py-1 text-xs font-semibold text-brand-700 shadow-sm backdrop-blur"
+          >
+            <Sparkles size={12} /> {badge}
+          </span>
+        )}
+        {title && (
+          <h2
+            class="mt-5 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
+          >
+            {title}
+          </h2>
+        )}
+        {subtitle && (
+          <p class="mt-4 text-lg text-slate-600">{subtitle}</p>
+        )}
+      </div>
+    )}
+
+    <div data-timeline-root class="relative mx-auto mt-20 max-w-5xl">
+      <div
+        aria-hidden="true"
+        class="timeline-line-h absolute left-1/6 right-1/6 top-8 hidden h-0.5 origin-left bg-linear-to-r from-brand-300 via-sky-300 to-violet-300 md:block"
+      >
+      </div>
+
+      <ol
+        class="[--row-gap:3rem] relative grid gap-12 md:grid-cols-3 md:gap-8"
+        aria-label="Passo a passo de uso"
+      >
+        {
+          steps.map((s, i) => (
+            <li
+              class="timeline-step group relative flex items-start gap-4 md:flex-col md:items-center md:gap-8"
+              style={`--step-index:${i}`}
+            >              {i < steps.length - 1 && (
+                <span
+                  aria-hidden="true"
+                  class="timeline-line-v absolute left-6 top-6 block w-0.5 origin-top bg-linear-to-b from-brand-300 via-sky-300 to-violet-300 md:hidden"
+                  style="height: calc(100% + var(--row-gap, 3rem))"
+                />
+              )}
+              <div class="relative z-10 shrink-0">
+                <div class="relative grid h-12 w-12 place-items-center rounded-2xl border-2 border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:scale-105 group-hover:border-brand-500 group-hover:bg-linear-to-br group-hover:from-brand-500 group-hover:to-brand-700 group-hover:text-white group-hover:shadow-lg group-hover:shadow-brand-500/30 md:h-16 md:w-16">
+                  <s.icon
+                    size={22}
+                    className="transition-transform duration-300 group-hover:scale-110 md:hidden"
+                  />
+                  <s.icon
+                    size={28}
+                    className="hidden transition-transform duration-300 group-hover:scale-110 md:block"
+                  />
+                  <span class="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full border-2 border-slate-50 bg-slate-900 text-[10px] font-bold text-white shadow-md transition-colors duration-300 group-hover:border-white group-hover:bg-white group-hover:text-brand-700 md:-right-2 md:-top-2 md:h-7 md:w-7 md:text-[11px]">
+                    {s.n}
+                  </span>
+                </div>
+              </div>
+
+              <div class="flex-1 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:border-slate-300 group-hover:shadow-xl group-hover:shadow-slate-900/5 md:max-w-xs md:text-center">
+                <h3 class="text-base font-bold tracking-tight text-slate-900">
+                  {s.t}
+                </h3>
+                <p class="mt-1.5 text-sm leading-relaxed text-slate-600">
+                  {s.d}
+                </p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+
+      {
+        cta && (
+          <div class="mt-20 flex justify-center">
+            <a
+              href={cta.href}
+              class="group inline-flex items-center gap-2 rounded-md bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98]"
+            >
+              {cta.text}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="transition-transform group-hover:translate-x-0.5"
+              >
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg>
+            </a>
+          </div>
+        )
+      }
+    </div>
+  </div>
+</section>
+
+<!--
+  Animation styles. Marked is:global so the [data-timeline-root].is-visible
+  selector still matches after the script (added at runtime) flips the class.
+  Class names (timeline-step, timeline-line-h/v) are unique enough to avoid
+  global collisions in this codebase.
+-->
+<style is:global>
+  .timeline-step {
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+      opacity 480ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .timeline-line-h {
+    transform: scaleX(0);
+    transition: transform 720ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .timeline-line-v {
+    position: absolute;
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Respect users who prefer reduced motion — show final state immediately. */
+  @media (prefers-reduced-motion: reduce) {
+    .timeline-step,
+    .timeline-line-h,
+    .timeline-line-v {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+
+  /* Triggered when the IntersectionObserver sees the timeline in view.
+   * Timing math (3 steps by default):
+   *   step delays:   0ms, 110ms, 220ms
+   *   step dones:    480ms, 590ms, 700ms  (delay + 480ms transition)
+   *   line starts:   (count - 1) * 110 + 480 = 700ms — AFTER the last
+   *                   node finishes settling.
+   *   Vertical line is split into N-1 per-<li> segments so it stops
+   *   exactly at each icon center, robust to varying card heights:
+   *     seg1 (in li[0]): 700 → 1060ms  (covers [icon1, icon2])  duration 360ms
+   *     seg2 (in li[1]): 1060 → 1420ms (covers [icon2, icon3])  duration 360ms
+   *   Each segment's height is `calc(100% + var(--row-gap))` so it
+   *   ends at the next icon center regardless of card height — keep
+   *   --row-gap in sync with the ol's gap class if spacing changes.
+   *   Horizontal line (md+) is single element: 700 → 1420ms / 720ms.
+   */
+  [data-timeline-root].is-visible .timeline-step {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: calc(var(--step-index, 0) * 110ms);
+  }
+  [data-timeline-root].is-visible .timeline-line-h {
+    transform: scaleX(1);
+    transition-delay: calc((var(--step-count, 3) - 1) * 110ms + 480ms);
+  }
+  [data-timeline-root].is-visible .timeline-line-v {
+    transform: scaleY(1);
+    /* Stagger each segment by its own duration so the line draws
+     * sequentially (seg N starts when seg N-1 finishes) — continuous. */
+    transition-delay: calc(
+      ((var(--step-count, 3) - 1) * 110ms + 480ms) +
+      var(--step-index, 0) * 360ms
+    );
+  }
+</style>
+
+<!--
+  No-JS fallback. Inline styles bypass the global <style> block (which targets
+  .timeline-* initial state, hiding content) so users without JS still see the
+  full timeline in its final state.
+-->
+<noscript>
+  <style>
+    .timeline-step {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+    .timeline-line-h {
+      transform: scaleX(1) !important;
+    }
+    .timeline-line-v {
+      transform: scaleY(1) !important;
+    }
+  </style>
+</noscript>
+
+<script>
+  // Reveal each timeline once it scrolls into view. Disconnects after the
+  // first hit so the animation plays once and never re-runs.
+  const timelines = document.querySelectorAll<HTMLElement>(
+    "[data-timeline-root]",
+  );
+  for (const root of timelines) {
+    const stepCount = root.querySelectorAll(".timeline-step").length;
+    root.style.setProperty("--step-count", String(stepCount));
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            io.unobserve(entry.target);
+          }
+        }
+      },
+      { threshold: 0.2, rootMargin: "0px 0px -80px 0px" },
+    );
+    io.observe(root);
+  }
+</script>
