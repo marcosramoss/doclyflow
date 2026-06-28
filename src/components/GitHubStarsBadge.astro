@@ -16,12 +16,12 @@
 //   brand-500 = #3b82f6 (focus ring).
 //
 // Always reads `PUBLIC_GITHUB_REPO` from .env (e.g.
-// `https://github.com/owner/doclify`). Falls back to a placeholder URL so
+// `https://github.com/owner/doclyflow`). Falls back to a placeholder URL so
 // the build never breaks; unknown variant values also fall back to "split".
 
 const repoUrl =
   (import.meta.env.PUBLIC_GITHUB_REPO as string | undefined)?.trim() ||
-  'https://github.com/SEU_USUARIO/doclify';
+  'https://github.com/SEU_USUARIO/doclyflow';
 
 const variantRaw = (
   import.meta.env.PUBLIC_GITHUB_BADGE_VARIANT as string | undefined
@@ -31,7 +31,7 @@ const variant: 'split' | 'social' | 'none' =
 
 const match = repoUrl.match(/github\.com\/([^/]+)\/([^/?#]+)/);
 const owner = match?.[1] ?? 'SEU_USUARIO';
-const repoRaw = match?.[2] ?? 'doclify';
+const repoRaw = match?.[2] ?? 'doclyflow';
 const repo = repoRaw.endsWith('.git') ? repoRaw.slice(0, -4) : repoRaw;
 
 // count panel in `split` uses the dark-step (brand-700) bg; the embedded

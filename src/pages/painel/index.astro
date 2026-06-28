@@ -4,7 +4,12 @@ import DashboardTable from '../../react/DashboardTable.tsx';
 import AppSidebar from '../../react/AppSidebar.tsx';
 ---
 
-<Layout title="Documentos · Doclify" hideChrome>
+<Layout
+  title="Meus Documentos · Doclyflow"
+  description="Gerencie e exporte seus documentos de levantamento de requisitos no Doclyflow."
+  hideChrome
+  noindex
+>
   <div class="min-h-screen">
     <AppSidebar client:only="react" activeRoute="documents" />
     <main class="min-w-0 lg:pl-65">

@@ -2,7 +2,7 @@
 -- Migration 0001 — OAuth-only `users` table
 -- =============================================================================
 -- Rationale:
---   The initial `users` table was created back when Doclify had an
+--   The initial `users` table was created back when Doclyflow had an
 --   email/password login (`password_hash` NOT NULL). When we switched to
 --   Google Identity Services (GIS), `schema.sql` was updated to the desired
 --   end-state but a partially-migrated install kept the old shape.
@@ -15,10 +15,10 @@
 --   install the ALTER would need a data backfill plan.
 --
 -- Apply with:
---   C:\xampp\mysql\bin\mysql.exe -u root doclify < api\sql\migrations\0001_oauth_columns.sql
+--   C:\xampp\mysql\bin\mysql.exe -u root doclyflow < api\sql\migrations\0001_oauth_columns.sql
 -- =============================================================================
 
-USE doclify;
+USE doclyflow;
 
 ALTER TABLE users
   ADD COLUMN google_sub VARCHAR(255) NOT NULL AFTER email,

@@ -1,5 +1,5 @@
 -- =============================================================================
--- Doclify API — canonical schema (MySQL 8)
+-- Doclyflow API — canonical schema (MySQL 8)
 -- =============================================================================
 -- ⚠️ NEVER run this file AND api/sql/migrations/0001_oauth_columns.sql
 --   in sequence. This file already encodes the post-0001 end-state; running
@@ -14,10 +14,10 @@
 -- with future column-type changes here — it is a snapshot, not a target.
 --
 -- Apply with:
---   mysql -h $DB_HOST -u $DB_USER -p$DB_PASS doclify < api/sql/schema.sql
+--   mysql -h $DB_HOST -u $DB_USER -p$DB_PASS doclyflow < api/sql/schema.sql
 --   php api/bin/migrate.php
 --   -- or paste this file into your SQL editor and run.
---   USE doclify;  -- ensure your sqleditor session is on `doclify`, not `mysql`.
+--   USE doclyflow;  -- ensure your sqleditor session is on `doclyflow`, not `mysql`.
 -- =============================================================================
 
 -- 1. Wipe existing objects in reverse FK dependency order.
@@ -27,17 +27,17 @@ DROP TABLE IF EXISTS user_tokens;
 DROP TABLE IF EXISTS users;
 
 -- 2. Ensure database exists with utf8mb4.
-CREATE DATABASE IF NOT EXISTS doclify
+CREATE DATABASE IF NOT EXISTS doclyflow
   DEFAULT CHARACTER SET utf8mb4
   DEFAULT COLLATE utf8mb4_unicode_ci;
 
-USE doclify;
+USE doclyflow;
 
 -- ----------------------------------------------------------------------------
 -- 1. users
 -- Identidade estável via `google_sub` (do JWT do Google Identity Services).
 -- `picture` é opcional e armazena a URL do avatar do Google.
--- `password_hash` foi removido intencionalmente (Doclify é 100% OAuth).
+-- `password_hash` foi removido intencionalmente (Doclyflow é 100% OAuth).
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
   id          INT UNSIGNED NOT NULL AUTO_INCREMENT,

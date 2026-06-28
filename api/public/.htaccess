@@ -1,5 +1,5 @@
 # =============================================================================
-# Doclify API — Apache config.
+# Doclyflow API — Apache config.
 # =============================================================================
 # Habilita o servidor Apache (com mod_rewrite) a rotear requisições
 # desconhecidas para o front controller em api/public/index.php.

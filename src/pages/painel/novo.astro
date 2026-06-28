@@ -8,8 +8,12 @@ const isEdit = Boolean(editId);
 ---
 
 <Layout
-  title={isEdit ? 'Editar Documento · Doclify' : 'Novo Documento · Doclify'}
+  title={isEdit ? 'Editar documento · Doclyflow' : 'Novo documento · Doclyflow'}
+  description={isEdit
+    ? 'Atualize os dados de um levantamento de requisitos no Doclyflow.'
+    : 'Crie um novo documento de levantamento de requisitos no Doclyflow.'}
   hideChrome
+  noindex
 >
   <div class="min-h-screen">
     <AppSidebar client:only="react" activeRoute="new" />

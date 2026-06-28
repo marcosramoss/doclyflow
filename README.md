@@ -1,8 +1,8 @@
-# Doclify
+# Doclyflow
 
 > **Levantamentos de requisitos que viram PDFs profissionais — direto do navegador, com a sua conta Google.**
 
-Doclify é um aplicativo web para criar, organizar e exportar documentos de levantamento de requisitos em **PDF estruturado**, sem complicação. Tudo 100% client-side: você escreve no navegador, vê o resultado renderizado em tempo real e baixa um PDF pronto pra compartilhar. Persistência em MySQL via API PHP, autenticação via **Google OAuth**.
+Doclyflow é um aplicativo web para criar, organizar e exportar documentos de levantamento de requisitos em **PDF estruturado**, sem complicação. Tudo em nuvem: você escreve no navegador, vê o resultado renderizado em tempo real e baixa um PDF pronto pra compartilhar. Persistência em MySQL via API PHP, autenticação via **Google OAuth**.
 
 ---
 
@@ -30,7 +30,7 @@ echo "PUBLIC_API_URL=http://localhost/api" > .env
 cp api/.env.example api/.env            # editar GOOGLE_CLIENT_ID/SECRET + DB_*
 
 # 4. Criar/atualizar schema (idempotente — dropa e recria)
-"C:\xampp\mysql\bin\mysql.exe" -uroot doclify < api/sql/schema.sql
+"C:\xampp\mysql\bin\mysql.exe" -uroot doclyflow < api/sql/schema.sql
 # ou: php api/bin/migrate.php
 
 # 5. Subir tudo (variantes A ou B):
@@ -49,7 +49,7 @@ Mais detalhes:
 - Deploy XAMPP & smoke tests → [`deploy/README.md`](deploy/README.md)
 - Backend PHP/MySQL & endpoints → [`api/README.md`](api/README.md)
 - Arquitetura completa, modelo de dados, convenções → [`CONTEXT.md`](CONTEXT.md)
-- Roadmap original → [`doclify.md`](doclify.md)
+- Roadmap original → [`doclyflow.md`](doclyflow.md)
 
 ---
 
@@ -65,6 +65,8 @@ Mais detalhes:
 | Autenticação           | Google Identity Services (OAuth)   |
 | Backend                | PHP 8.2 vanilla + MySQL 8          |
 
+**Open Graph image (`public/og-image.png`)** — gerada via `npm run gen:og` (script em `scripts/generate-og-image.mjs` que usa `@resvg/resvg-js`, renderer WASM/NAPI sem dependências nativas). Roda automaticamente antes de `npm run build` (hook `prebuild`). Para rebranding, edite cores/texto no SVG inline do script e rode `npm run gen:og` — o PNG é commitado em `public/` e servido estático pelo Astro. Substitui o logo-doclyflow.svg nas tags `og:image`/`twitter:image` porque o Twitter/X rejeita SVG em `summary_large_image`.
+
 ---
 
 ## 🔐 Segurança
@@ -78,7 +80,7 @@ Mais detalhes:
 ## 🧭 Estrutura (resumo)
 
 ```
-doclify/
+doclyflow/
 ├─ src/                     # Frontend Astro+React
 │  ├─ pages/painel/         # /painel, /painel/novo, /painel/document
 │  ├─ react/                # 6 ilhas: LoginForm, AppSidebar, DashboardTable, …

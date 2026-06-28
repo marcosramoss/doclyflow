@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Doclify API — seed.
+ * Doclyflow API — seed.
  *
  * Cria (idempotente) o usuário demo `demo@requisita.app / demo1234`
  * e popula três documentos-modelo que espelham o frontend seed.
@@ -34,7 +34,7 @@ $demoEmail = 'demo@requisita.app';
 // Google Identity Services (sub diferente, o `UNIQUE` continua valendo).
 $demoSub = 'seed-demo-00000000-0000-0000-0000-000000000000';
 
-echo "Seeding Doclify demo data...\n";
+echo "Seeding Doclyflow demo data...\n";
 
 $pdo->beginTransaction();
 try {

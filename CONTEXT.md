@@ -1,12 +1,12 @@
-# Doclify — Contexto do Projeto
+# Doclyflow — Contexto do Projeto
 
-> Documentação viva do **Doclify** — gerador web de levantamentos de requisitos com exportação em **PDF** e **Markdown**, persistência em **MySQL** via **API REST PHP vanilla**, autenticação exclusiva via **Google OAuth**. Reflete o estado atual do código na `main` — atualizado após o ciclo de simplificações (R6+).
+> Documentação viva do **Doclyflow** — gerador web de levantamentos de requisitos com exportação em **PDF** e **Markdown**, persistência em **MySQL** via **API REST PHP vanilla**, autenticação exclusiva via **Google OAuth**. Reflete o estado atual do código na `main` — atualizado após o ciclo de simplificações (R6+).
 
 ---
 
 ## 1. Visão Geral
 
-O **Doclify** permite criar, organizar e exportar documentos de levantamento de requisitos diretamente no navegador. Os documentos persistem em **MySQL** através de uma **API REST PHP vanilla** em `api/`; autenticação exclusivamente via **Google OAuth** (Google Identity Services no frontend + verificação do ID token no backend). O token de sessão fica em `localStorage` do navegador.
+O **Doclyflow** permite criar, organizar e exportar documentos de levantamento de requisitos diretamente no navegador. Os documentos persistem em **MySQL** através de uma **API REST PHP vanilla** em `api/`; autenticação exclusivamente via **Google OAuth** (Google Identity Services no frontend + verificação do ID token no backend). O token de sessão fica em `localStorage` do navegador.
 
 **Funcionalidades-chave:**
 - Landing page (hero com preview, features, "Como funciona")
@@ -45,7 +45,7 @@ A integração Tailwind v4 é feita **diretamente via plugin Vite** (sem `@astro
 ## 3. Estrutura de Pastas
 
 ```
-doclify/
+doclyflow/
 ├─ astro.config.mjs                 # config Astro (estático, fail-fast em PUBLIC_API_URL)
 ├─ package.json
 ├─ tsconfig.json
@@ -53,11 +53,11 @@ doclify/
 ├─ .gitignore                       # ignora OAuth.md, .env, dist, etc.
 ├─ README.md                        # quick start do projeto inteiro
 ├─ CONTEXT.md                       # este arquivo
-├─ doclify.md                       # plano original (roadmap cronológico)
+├─ doclyflow.md                       # plano original (roadmap cronológico)
 ├─ OAuth.md                         # ⚠️ client_id + client_secret — NUNCA comitar
 ├─ deploy/
 │  ├─ README.md                     # guia de deploy XAMPP
-│  └─ xampp-httpd-doclify.conf      # vhost Apache
+│  └─ xampp-httpd-doclyflow.conf      # vhost Apache
 ├─ bin/
 │  └─ deploy-xampp.bat              # build + sync + smoke tests
 ├─ api/                             # Backend PHP/MySQL
@@ -198,7 +198,7 @@ API pública (era localStorage, agora async sobre a API): `getDocuments()` · `g
 
 API pública: `loginWithGoogle(idToken)` · `logout()` · `isAuthenticated()` · `getCurrentUser()` · `initialsOf(user)` · `AUTH_KEY` · `CurrentUser` · `LoginResult`.
 
-- Token em `localStorage` chave **`doclify:auth:v1`** como `{ token, user, expiresAt }`.
+- Token em `localStorage` chave **`doclyflow:auth:v1`** como `{ token, user, expiresAt }`.
 - `CurrentUser` (retornado pelo backend): `{ id, name, email, picture: string | null }`. **`picture`** é a URL do avatar do Google Identity Services (`null` em contas que não compartilharam foto).
 - `loginWithGoogle(idToken)` delega para `POST /api/auth/google` (envia o JWT cru).
 - `logout()` é **async** — chama `POST /api/auth/logout` antes de limpar localStorage.
@@ -223,11 +223,11 @@ API pública: `loginWithGoogle(idToken)` · `logout()` · `isAuthenticated()` ·
 cp api/.env.example api/.env       # ou copy no Windows
 # Editar api/.env:
 #   FRONTEND_ORIGIN=http://localhost
-#   DB_HOST=127.0.0.1 / DB_PORT=3306 / DB_NAME=doclify / DB_USER=root / DB_PASS=
+#   DB_HOST=127.0.0.1 / DB_PORT=3306 / DB_NAME=doclyflow / DB_USER=root / DB_PASS=
 #   GOOGLE_CLIENT_ID=<…> / GOOGLE_CLIENT_SECRET=<…>
 #
 # 2. Aplicar schema (drop + recreate idempotente)
-"C:\xampp\mysql\bin\mysql.exe" -uroot doclify < api/sql/schema.sql
+"C:\xampp\mysql\bin\mysql.exe" -uroot doclyflow < api/sql/schema.sql
 #   ou:
 php api/bin/migrate.php
 #
@@ -259,8 +259,8 @@ php -S 127.0.0.1:8080 -t api/public
 >
 > **Sequência correta para fresh install:**
 > ```bash
-> "C:\xampp\mysql\bin\mysql.exe" -uroot doclify < api/sql/schema.sql
-> "C:\xampp\mysql\bin\mysql.exe" -uroot doclify < api/sql/migrations/0004_documents_technologies_text.sql
+> "C:\xampp\mysql\bin\mysql.exe" -uroot doclyflow < api/sql/schema.sql
+> "C:\xampp\mysql\bin\mysql.exe" -uroot doclyflow < api/sql/migrations/0004_documents_technologies_text.sql
 > ```
 > `schema.sql` e a `0001` NUNCA devem rodar em sequência — o primeiro já contém o estado pós-migration-0001.
 >
@@ -420,8 +420,8 @@ cp api/.env.example api/.env
 # editar GOOGLE_CLIENT_ID/SECRET + credenciais DB + FRONTEND_ORIGIN
 
 # 3. Backend (schema canônico + migration 0004 para a coluna `technologies`)
-"C:\xampp\mysql\bin\mysql.exe" -uroot doclify < api/sql/schema.sql
-"C:\xampp\mysql\bin\mysql.exe" -uroot doclify < api/sql/migrations/0004_documents_technologies_text.sql
+"C:\xampp\mysql\bin\mysql.exe" -uroot doclyflow < api/sql/schema.sql
+"C:\xampp\mysql\bin\mysql.exe" -uroot doclyflow < api/sql/migrations/0004_documents_technologies_text.sql
 
 # 4. Dev (dois terminais) ou XAMPP
 php -S 127.0.0.1:8080 -t api/public         # API em :8080 (dev)
@@ -478,7 +478,7 @@ npm run dev                             # dev em http://localhost:4321
 
 ### Full-stack (XAMPP — recomendado para "abrir e usar")
 ```bat
-:: dentro de C:\desenvolvimento\doclify\
+:: dentro de C:\desenvolvimento\doclyflow\
 bin\deploy-xampp.bat                    :: build + sync + smoke tests
 :: abrir http://localhost/ e fazer login com Google
 ```
@@ -489,7 +489,7 @@ Primeiro login com sua conta Google — você será auto-registrado (vinculado p
 ```bash
 # Adiciona coluna `technologies` (CSV) e dropa catálogo legado se existir.
 # OBRIGATÓRIA para fresh installs (o schema.sql canônico ainda não inclui essa coluna).
-"C:\xampp\mysql\bin\mysql.exe" -uroot doclify < api\sql\migrations\0004_documents_technologies_text.sql
+"C:\xampp\mysql\bin\mysql.exe" -uroot doclyflow < api\sql\migrations\0004_documents_technologies_text.sql
 ```
 
 ---
@@ -507,7 +507,7 @@ Primeiro login com sua conta Google — você será auto-registrado (vinculado p
 - **R5 — Google OAuth + Painel (XAMPP-friendly)**:
   - Substituição completa da autenticação por Google Identity Services + verificação do ID token via `oauth2.googleapis.com/tokeninfo` (Google aud check, `exp`, `email_verified`).
   - Migration `api/sql/migrations/0001_oauth_columns.sql`: `users` recebe `google_sub VARCHAR(255) NOT NULL UNIQUE` + `picture VARCHAR(512) NULL`, perde `password_hash`. Aplicada na dev DB; `schema.sql` canônico agora reflete o estado OAuth-only (idempotente DROP+CREATE).
-  - Sidebar/Header/form rebranded: "RequisitaApp" → **Doclify**; "Acessar Dashboard" → "Acessar Painel"; "Workspace" → "Painel".
+  - Sidebar/Header/form rebranded: "RequisitaApp" → **Doclyflow**; "Acessar Dashboard" → "Acessar Painel"; "Workspace" → "Painel".
   - **Rename de rota `/dashboard` → `/painel`** — XAMPP 8.x serve um Alias `/dashboard` que hijackeia e exibe o painel Phoenicium dele. Renomear a pasta + URL refs evita ter que mexer no Apache.
   - **Rota `/dashboard/[id]` (SSR) → `/painel/document` (estática com `?id=`)** — remove dependência efetiva do adapter `@astrojs/node`. Build volta a ser 100% estático.
   - `.gitignore` agora cobre `OAuth.md`, `api/.env` e `.env` da raiz — vazamentos de `client_secret` evitados a nível de repo.
@@ -518,4 +518,4 @@ Primeiro login com sua conta Google — você será auto-registrado (vinculado p
 
 - **R2 — Header + Auth mock**: header simplificado para apenas Logo + Entrar (ou avatar+Sair quando logado). Sidebar sticky à esquerda. Mock auth via localStorage com cross-tab sync.
 
-- **R1 — Bootstrap**: scaffold completo de Astro 5 + React 19 + Tailwind v4 + jsPDF conforme `doclify.md`.
+- **R1 — Bootstrap**: scaffold completo de Astro 5 + React 19 + Tailwind v4 + jsPDF conforme `doclyflow.md`.

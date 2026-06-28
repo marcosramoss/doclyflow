@@ -1,5 +1,5 @@
 // =============================================================================
-// Doclify — API client (fetch wrapper)
+// Doclyflow — API client (fetch wrapper)
 // =============================================================================
 // Camada fina sobre fetch que:
 //   - Injeta Bearer token automaticamente a partir do storage informado

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import LogoDark from "../../public/logo-dark-doclify.svg";
+import LogoDark from "../../public/logo-dark-doclyflow.svg";
 import { FileText, LogOut, Menu, X } from "lucide-react";
 import {
   AUTH_KEY,

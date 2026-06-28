@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Tabela de rotas do Doclify API.
+ * Tabela de rotas do Doclyflow API.
  *
  * Convenções:
  *   - prefixo `/api/...`

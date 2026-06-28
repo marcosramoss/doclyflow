@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Doclify API — front controller.
+ * Doclyflow API — front controller.
  *
  * Responsabilidades deste arquivo:
  *   1. Permitir que o built-in server (`php -S`) sirva arquivos estáticos reais

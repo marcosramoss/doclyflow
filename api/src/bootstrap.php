@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Doclify API — bootstrap.
+ * Doclyflow API — bootstrap.
  *
  * 1. Registra autoloader PSR-4 manual para o namespace `App\` enraizado em api/src.
  *    Usa DIRECTORY_SEPARATOR para ser seguro em Windows/Linux.

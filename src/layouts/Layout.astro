@@ -3,16 +3,59 @@ import "../styles/global.css";
 import Header from "../components/Header.astro";
 
 interface Props {
+  /** <title> + og:title + twitter:title. */
   title?: string;
+  /** Meta description + og:description + twitter:description. */
   description?: string;
+  /** Esconde Header + footer (páginas autenticadas /painel/*). */
   hideChrome?: boolean;
+  /**
+   * Imagem OG/Twitter Card — usado para preview ao compartilhar em redes sociais.
+   * Requisitos:
+   *   - 1200×630 recomendado para Facebook/LinkedIn e Twitter
+   *   - PNG ou JPG (Twitter rejeita SVG no `summary_large_image`)
+   *   - Em prod troque `/logo-doclyflow.svg` por `/og-image.png` para garantir
+   *     preview consistente em TODOS os canais — incluindo o Twitter/X.
+   */
+  ogImage?: string;
+  /** og:type — "website" padrão; páginas autenticadas podem passar "article". */
+  ogType?: 'website' | 'article';
+  /** Força noindex/nofollow (páginas autenticadas que não devem ser indexadas). */
+  noindex?: boolean;
 }
 
 const {
-  title = "Doclify — Levantamentos de Requisitos em PDF e Markdown",
-  description = "Crie, organize e exporte levantamentos de requisitos em PDF ou Markdown com o Doclify. Login com Google e tudo salvo na nuvem.",
+  title = "Doclyflow — Levante requisitos e exporte em PDF ou Markdown",
+  description = "Crie, organize e exporte levantamentos de requisitos profissionais em PDF ou Markdown com o Doclyflow. Login com Google, tudo salvo na nuvem — sem cadastro e sem complicação.",
   hideChrome = false,
+  // PNG 1200×630 gerado via `npm run gen:og` (scripts/generate-og-image.mjs).
+  // Substitui o logo-doclyflow.svg porque Twitter/X rejeita SVG em
+  // `summary_large_image` — Facebook/LinkedIn/WhatsApp também renderizam com
+  // mais qualidade quando comparados a vetores em algumas situações de cache.
+  ogImage = "/og-image.png",
+  ogType = "website",
+  noindex = false,
 } = Astro.props;
+
+// Origem canônica — em produção use `PUBLIC_SITE_URL` (ex.: https://doclyflow.com.br)
+// para que og:url e canonical não tragam `http://localhost:4321` no preview social.
+// Em dev, fallback para `Astro.url.origin` (request atual).
+const siteOrigin = (
+  (import.meta.env.PUBLIC_SITE_URL as string | undefined)?.replace(/\/$/, '')
+  ?? Astro.url.origin
+).replace(/\/$/, '');
+
+// `new URL(path, base)` resolve corretamente tanto paths root-relative quanto
+// URLs absolutas — concatenação manual (`${base}${path}`) quebraria se alguém
+// passar `ogImage="https://cdn.../x.png"` ou se o `pathname` começar com `//`.
+//
+// Antes da construção normalizamos o pathname removendo trailing slash (Google
+// trata `/login` e `/login/` como URLs distintas → potencial duplicate content).
+// Astro resolve ambos com `trailingSlash: 'ignore'`; forçamos um formato único
+// aqui para a canonical bater sempre com o que o sitemap/Google prefere.
+const cleanPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const canonicalURL = new URL(cleanPath, siteOrigin).toString();
+const ogImageURL = new URL(ogImage, siteOrigin).toString();
 ---
 
 <!doctype html>
@@ -30,6 +73,26 @@ const {
       rel="stylesheet"
     />
     <title>{title}</title>
+
+    {/* Canonical — evita que parâmetros de query/UTM apareçam no Google index. */}
+    <link rel="canonical" href={canonicalURL} />
+
+    {/* Open Graph — preview ao compartilhar link em WhatsApp/Facebook/LinkedIn. */}
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content="Doclyflow" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={ogImageURL} />
+    <meta property="og:locale" content="pt_BR" />
+
+    {/* Twitter Card — mesmo conteúdo do OG, formato "summary_large_image". */}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL} />
+
+    {noindex && <meta name="robots" content="noindex, nofollow, noarchive" />}
   </head>
   <body
     class="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased"
@@ -41,7 +104,7 @@ const {
         <footer class="mt-auto border-t border-slate-200 bg-white">
           <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-6 py-6 text-sm text-slate-500 sm:flex-row">
             <p>
-              Doclify © {new Date().getFullYear()} — Construa levantamentos de
+              Doclyflow © {new Date().getFullYear()} — Construa levantamentos de
               requisitos com confiança.
             </p>
             <p class="flex items-center gap-1.5">

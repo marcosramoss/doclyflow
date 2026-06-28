@@ -1,4 +1,4 @@
-# Plano de Desenvolvimento: Doclify (Gerador de Levantamento de Requisitos)
+# Plano de Desenvolvimento: Doclyflow (Gerador de Levantamento de Requisitos)
 
 Este documento estabelece o cronograma, a arquitetura e os passos de implementação para o aplicativo web de geração e exportação de levantamentos de requisitos em PDF.
 

@@ -22,10 +22,10 @@
 --   no ADD COLUMN (mesmo padrão da 0003).
 --
 -- Apply with:
---   C:\xampp\mysql\bin\mysql.exe -u root doclify < api\sql\migrations\0004_documents_technologies_text.sql
+--   C:\xampp\mysql\bin\mysql.exe -u root doclyflow < api\sql\migrations\0004_documents_technologies_text.sql
 -- =============================================================================
 
-USE doclify;
+USE doclyflow;
 
 -- 1) Limpa o catálogo legado (drop primeiro a join, depois a tabela base)
 DROP TABLE IF EXISTS document_technologies;
@@ -35,7 +35,7 @@ DROP TABLE IF EXISTS technologies;
 --    se o usuário chegou a rodar aquela migration.
 SET @ot_exists := (
   SELECT COUNT(*) FROM information_schema.COLUMNS
-  WHERE TABLE_SCHEMA = 'doclify'
+  WHERE TABLE_SCHEMA = 'doclyflow'
     AND TABLE_NAME = 'documents'
     AND COLUMN_NAME = 'other_technology'
 );
@@ -50,7 +50,7 @@ DEALLOCATE PREPARE stmt;
 -- 3) Adiciona coluna única `technologies` como CSV (TEXT, NULL permitido)
 SET @col_exists := (
   SELECT COUNT(*) FROM information_schema.COLUMNS
-  WHERE TABLE_SCHEMA = 'doclify'
+  WHERE TABLE_SCHEMA = 'doclyflow'
     AND TABLE_NAME = 'documents'
     AND COLUMN_NAME = 'technologies'
 );

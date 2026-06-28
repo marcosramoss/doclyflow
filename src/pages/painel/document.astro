@@ -9,7 +9,12 @@ import AppSidebar from '../../react/AppSidebar.tsx';
 // dinâmico passa para o React, mantendo o build como cliente estático.
 ---
 
-<Layout title="Documento · Doclify" hideChrome>
+<Layout
+  title="Documento · Doclyflow"
+  description="Veja os detalhes e exporte este documento de levantamento de requisitos."
+  hideChrome
+  noindex
+>
   <div class="min-h-screen">
     <AppSidebar client:only="react" activeRoute="documents" />
     <main class="min-w-0 lg:pl-65">

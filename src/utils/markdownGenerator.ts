@@ -1,5 +1,5 @@
 // =============================================================================
-// Doclify — markdown generator
+// Doclyflow — markdown generator
 // =============================================================================
 // Serializa um RequirementDocument em um .md amigável tanto para leitura
 // humana quanto para uso como "skill" de uma IA: H1 com o título do projeto,
@@ -112,7 +112,7 @@ export function generateDocumentMarkdown(doc: RequirementDocument): string {
   // ─── Rodapé ─────────────────────────────────────────────────────────────
   lines.push('---');
   lines.push('');
-  lines.push(`_Exportado de Doclify em ${formatDateTime(new Date().toISOString())}._`);
+  lines.push(`_Exportado de Doclyflow em ${formatDateTime(new Date().toISOString())}._`);
   lines.push('');
 
   return lines.join('\n');

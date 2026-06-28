@@ -1,6 +1,6 @@
 # Deploy — XAMPP (Windows)
 
-Configuração dedicada para rodar o Doclify inteiramente sob o Apache do
+Configuração dedicada para rodar o Doclyflow inteiramente sob o Apache do
 XAMPP, sem depender de `php -S` (built-in) ou `npm run dev` (Astro dev
 server). Tudo em **uma porta (:80)** com Apache servindo o frontend
 estático e a API PHP — coerente com o fluxo de "abrir XAMPP e usar".
@@ -12,14 +12,14 @@ Se esta é a primeira vez, copie manualmente os passos de **§ 1
 ciclo de "rebuildar + deployar" cabe em:
 
 ```bat
-:: a partir de C:\desenvolvimento\doclify\
+:: a partir de C:\desenvolvimento\doclyflow\
 bin\deploy-xampp.bat
 ```
 
 O script faz build, copia todos os dotfiles corretos (incluindo
 `api/.htaccess` que é o ponto crítico — ver § 5), re-sincroniza
 `api/src|sql|bin|public`, e roda três smoke tests automáticos no fim.
-Após ele imprimir "Doclify deploy concluído", abra `http://localhost/`
+Após ele imprimir "Doclyflow deploy concluído", abra `http://localhost/`
 e clique em "Entrar com Google".
 
 ## 1. Pré-requisitos
@@ -40,7 +40,7 @@ e clique em "Entrar com Google".
     FRONTEND_ORIGIN=http://localhost
     DB_HOST=127.0.0.1
     DB_PORT=3306
-    DB_NAME=doclify
+    DB_NAME=doclyflow
     DB_USER=root
     DB_PASS=
     TOKEN_TTL_HOURS=168
@@ -59,7 +59,7 @@ e clique em "Entrar com Google".
 ## 2. Build do frontend (manual)
 
 ```bat
-:: dentro de C:\desenvolvimento\doclify\
+:: dentro de C:\desenvolvimento\doclyflow\
 npm install
 npm run build                          :: gera dist\client\
 xcopy /E /Y /I dist\client\* C:\xampp\htdocs\
@@ -75,7 +75,7 @@ ver § 5) e roda smoke tests.
 ```bash
 # dropar + recriar do zero (XAMPP defaults: root sem senha)
 "C:\xampp\mysql\bin\mysql.exe" -u root -p
-mysql> DROP DATABASE IF EXISTS doclify;
+mysql> DROP DATABASE IF EXISTS doclyflow;
 mysql> exit
 
 "C:\xampp\php\php.exe" "C:\xampp\htdocs\api\bin\migrate.php"
@@ -90,13 +90,13 @@ Para upgrade de banco pré-OAuth (preservando usuários reais):
 
 ## 4. Apache vhost
 
-Siga os passos em `deploy/xampp-httpd-doclify.conf`:
+Siga os passos em `deploy/xampp-httpd-doclyflow.conf`:
 
-1. Copie `deploy/xampp-httpd-doclify.conf` para
+1. Copie `deploy/xampp-httpd-doclyflow.conf` para
    `C:\xampp\apache\conf\extra\`.
 2. Abra `C:\xampp\apache\conf\httpd.conf` e adicione ao final:
    ```
-   Include conf/extra/httpd-doclify.conf
+   Include conf/extra/httpd-doclyflow.conf
    ```
 3. Reinicie o Apache pelo painel do XAMPP.
 
@@ -108,7 +108,7 @@ para duas topologias de deploy distintas:
 
 | Topologia                                              | `.htaccess` necessário                    | Onde fica                       | RewriteRule                                       |
 | ------------------------------------------------------ | ---------------------------------------- | ------------------------------- | ------------------------------------------------- |
-| `DocumentRoot = C:\xampp\htdocs` (padrão Doclify)      | **`api/.htaccess`**                      | `htdocs\api\.htaccess`          | `^.*$ public/index.php` (com `RewriteBase /api/`) |
+| `DocumentRoot = C:\xampp\htdocs` (padrão Doclyflow)      | **`api/.htaccess`**                      | `htdocs\api\.htaccess`          | `^.*$ public/index.php` (com `RewriteBase /api/`) |
 | `DocumentRoot = C:\xampp\htdocs\api\public` (raro)     | `api/public/.htaccess`                   | `htdocs\api\public\.htaccess`   | `^ index.php`                                     |
 
 **Por que o de `api/public/` sozinho não basta** no deploy padrão? O

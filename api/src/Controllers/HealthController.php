@@ -19,7 +19,7 @@ final class HealthController
         Response::json([
             'status' => 'ok',
             'time' => gmdate('c'),
-            'service' => 'doclify-api',
+            'service' => 'doclyflow-api',
         ]);
     }
 }

@@ -228,7 +228,7 @@ export default function LoginForm() {
           <div className="mt-7 flex items-start gap-2 rounded-md border border-dashed border-slate-300 bg-slate-50/60 px-4 py-3 text-xs text-slate-600">
             <ShieldCheck size={14} className="mt-0.5 shrink-0 text-slate-500" />
             <p>
-              Sua sessão é aberta com sua conta Google. O Doclify usa os
+              Sua sessão é aberta com sua conta Google. O Doclyflow usa os
               serviços do Google para iniciar a sua sessão — nenhum dado de
               senha trafega pela aplicação.
             </p>

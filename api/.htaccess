@@ -1,5 +1,5 @@
 # =============================================================================
-# Doclify API — Apache config (deploy com DocumentRoot em htdocs/).
+# Doclyflow API — Apache config (deploy com DocumentRoot em htdocs/).
 # =============================================================================
 # Este arquivo DEVE ficar em `htdocs/api/.htaccess` quando o Apache serve
 # `C:/xampp/htdocs` como DocumentRoot. Ele captura URLs do tipo
@@ -8,7 +8,7 @@
 #
 # Existe também `api/public/.htaccess` para o caso alternativo de hospedar
 # o DocumentRoot diretamente em `htdocs/api/public/` (cenário incomum;
-# o Doclify assume o deploy em `htdocs/`).
+# o Doclyflow assume o deploy em `htdocs/`).
 #
 # Não é necessário se for usar exclusivamente `php -S` embutido —
 # o built-in server do PHP não carrega `.htaccess`.

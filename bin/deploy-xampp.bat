@@ -1,6 +1,6 @@
 @echo off
 REM =============================================================================
-REM Doclify — deploy para XAMPP (Windows).
+REM Doclyflow — deploy para XAMPP (Windows).
 REM =============================================================================
 REM Idempotente e seguro de rodar várias vezes. Faz:
 REM   1. `npm run build` no projeto Astro (precisa de .env com PUBLIC_API_URL).
@@ -13,13 +13,13 @@ REM   5. Sincroniza `api\src`, `api\sql`, `api\bin` (deps PHP não vão no build
 REM   6. Copia `api\.env` se existir (preserva credenciais sensíveis, opcional).
 REM   7. Smoke tests automatizados — `/api/health`, OPTIONS preflight.
 REM
-REM Uso (a partir de C:\desenvolvimento\doclify\):
+REM Uso (a partir de C:\desenvolvimento\doclyflow\):
 REM     bin\deploy-xampp.bat
 REM
 REM Pré-requisitos:
 REM     - XAMPP com Apache em :80 e PHP 8.2+
 REM     - `mod_rewrite` carregado + AllowOverride FileInfo/All (default XAMPP)
-REM     - MySQL/MariaDB rodando com banco `doclify` já migrado
+REM     - MySQL/MariaDB rodando com banco `doclyflow` já migrado
 REM     - `.env` e `api\.env` no projeto (você tem um exemplo em api\.env.example)
 REM =============================================================================
 
@@ -138,6 +138,6 @@ echo [smoke] GET http://localhost/
 curl -s -o NUL -w "        %{http_code} %{content_type}\n" -m 5 http://localhost/
 
 echo.
-echo Doclify deploy concluido.
+echo Doclyflow deploy concluido.
 echo Teste manualmente: http://localhost/login/  →  clique no botao Google.
 exit /b 0

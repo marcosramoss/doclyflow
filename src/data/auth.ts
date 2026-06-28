@@ -1,5 +1,5 @@
 // =============================================================================
-// Doclify — auth
+// Doclyflow — auth
 // =============================================================================
 // Camada fina sobre o API client. Mantém a mesma API pública (`logout`,
 // `isAuthenticated`, `getCurrentUser`, `initialsOf`, `AUTH_KEY`) para
@@ -28,7 +28,7 @@ export interface LoginResult {
   error?: string;
 }
 
-export const AUTH_KEY = 'doclify:auth:v1';
+export const AUTH_KEY = 'doclyflow:auth:v1';
 
 function describeError(e: unknown, fallback: string): string {
   if (e instanceof ApiError) {
@@ -42,7 +42,7 @@ function describeError(e: unknown, fallback: string): string {
 }
 
 /**
- * Troca o ID token do Google Identity Services por uma sessão Doclify.
+ * Troca o ID token do Google Identity Services por uma sessão Doclyflow.
  * Chamado pelo `LoginForm` quando o usuário conclui o popup do Google.
  */
 export async function loginWithGoogle(

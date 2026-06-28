@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Doclify API — migrate.
+ * Doclyflow API — migrate.
  *
  * Aplica api/sql/schema.sql ao banco configurado em .env.
  *

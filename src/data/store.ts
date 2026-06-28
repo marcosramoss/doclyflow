@@ -1,5 +1,5 @@
 // =============================================================================
-// Doclify — documents store
+// Doclyflow — documents store
 // =============================================================================
 // Substitui o antigo mock em localStorage por chamadas reais ao backend.
 //

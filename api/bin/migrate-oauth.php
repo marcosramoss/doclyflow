@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Doclify API — OAuth migration helper.
+ * Doclyflow API — OAuth migration helper.
  *
  * Atualiza bancos pré-Google OAuth para o novo formato de `users`:
  *   - Adiciona coluna `google_sub` (se faltar)
