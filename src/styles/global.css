@@ -29,3 +29,23 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ---------------------------------------------------------------------------
+ * Google Identity Services — botão "Entrar com Google"
+ * ---------------------------------------------------------------------------
+ * O `accounts.id.renderButton()` injeta um wrapper inline com
+ * `style="width: <px>"` (sem a opção `width` no JS, o GIS usa uma largura
+ * padrão baseada no texto). Para alinhar o botão com cards irmãos dentro
+ * do mesmo container (ex.: card de aviso de segurança na tela de login),
+ * forçamos o wrapper a ocupar 100% da largura do pai via `!important`,
+ * preservando o padding interno e o ícone/texto que o Google injeta na
+ * estrutura `.abcRioButton`.
+ * --------------------------------------------------------------------------- */
+.google-signin-host {
+  width: 100%;
+  display: block;
+}
+.google-signin-host > div {
+  width: 100% !important;
+  max-width: 100% !important;
+}

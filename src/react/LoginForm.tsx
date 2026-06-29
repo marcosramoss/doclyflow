@@ -131,7 +131,6 @@ export default function LoginForm() {
                   text: 'signin_with',
                   shape: 'rectangular',
                   logo_alignment: 'left',
-                  width: 320,
                   locale: 'pt-BR',
                 });
               }
@@ -153,7 +152,6 @@ export default function LoginForm() {
             text: 'signin_with',
             shape: 'rectangular',
             logo_alignment: 'left',
-            width: 320,
             locale: 'pt-BR',
           });
         }
@@ -187,9 +185,6 @@ export default function LoginForm() {
         <div className="h-1.5 bg-linear-to-r from-brand-500 via-sky-500 to-violet-500" />
         <div className="px-7 py-9">
           <div className="mb-7 flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-lg bg-linear-to-br from-brand-500 to-brand-700 text-white shadow-sm">
-              <LogIn size={20} />
-            </span>
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-slate-900">
                 Entrar
@@ -201,10 +196,15 @@ export default function LoginForm() {
           </div>
 
           {/* Botão oficial do Google Identity Services. Renderizado como
-              div filha de `buttonRef` via `accounts.id.renderButton`. */}
+              div filha de `buttonRef` via `accounts.id.renderButton`. O CSS
+              em `.google-signin-host > div` força o botão a esticar até a
+              largura do container — assim ele acompanha o card de aviso
+              abaixo (mesma largura do conteúdo do card). O `min-h-11`
+              mantém altura durante o carregamento antes do botão ser
+              injetado. */}
           <div
             ref={buttonRef}
-            className="flex min-h-11 items-center justify-center"
+            className="google-signin-host min-h-11 w-full"
             aria-label="Entrar com Google"
             aria-busy={loading || !ready}
           />
