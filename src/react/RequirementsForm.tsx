@@ -24,6 +24,7 @@ import {
   type RequirementPriority,
   type RequirementType,
 } from '../data/types';
+import { resolveDocumentId } from '../utils/documentId';
 
 interface FormRequirement extends Omit<Requirement, 'id'> {
   id: string;
@@ -129,27 +130,28 @@ const TYPE_BADGE: Record<RequirementType, string> = {
   'non-functional': 'bg-violet-100 text-violet-700 ring-violet-200',
 };
 
-interface RequirementsFormProps {
-  documentId?: string;
-}
-
-export default function RequirementsForm({
-  documentId,
-}: RequirementsFormProps) {
-  const isEditMode = Boolean(documentId);
+/**
+ * Resolve o id do documento a editar. Em build SSG, o prop chegaria como
+ * `undefined` mesmo quando a URL real tem `?id=...` (query params
+ * avaliadas em build, não em runtime). Lemos `window.location.search`
+ * diretamente — ver `src/utils/documentId.ts` para detalhes.
+ */
+export default function RequirementsForm() {
+  const effectiveId = resolveDocumentId();
+  const isEditMode = Boolean(effectiveId);
 
   const [form, setForm] = useState<FormState>(makeEmptyDocument);
   const [hydrated, setHydrated] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const [errors, setErrors] = useState<{ [k: string]: string }>({});
 
-  // Hydrate from store or URL param
+  // Hydrate from store ou do param da URL.
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      if (documentId) {
+      if (effectiveId) {
         try {
-          const existing = await getDocument(documentId);
+          const existing = await getDocument(effectiveId);
           if (cancelled) return;
           if (existing) {
             const techsFromCatalog = (existing.technologies ?? []).filter(
@@ -187,7 +189,7 @@ export default function RequirementsForm({
     return () => {
       cancelled = true;
     };
-  }, [documentId]);
+  }, [effectiveId]);
 
   const counters = useMemo(() => {
     const f = form.requirements.filter((r) => r.type === 'functional').length;

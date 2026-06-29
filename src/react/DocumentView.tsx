@@ -22,6 +22,7 @@ import {
 import { downloadRequirementsPDF } from '../utils/pdfGenerator';
 import { downloadDocumentMarkdown } from '../utils/markdownGenerator';
 import { formatDate, formatDateTime } from '../utils/dates';
+import { resolveDocumentId } from '../utils/documentId';
 
 const STATUS_STYLES: Record<DocumentStatus, { bg: string; icon: React.ElementType }> = {
   draft: { bg: 'bg-slate-100 text-slate-700 ring-slate-200', icon: FileTextIcon },
@@ -42,21 +43,9 @@ const TYPE_BADGE: Record<Requirement['type'], string> = {
 };
 
 /**
- * Lê o ID do documento da URL quando o componente é montado em uma página
- * puramente estática (sem params do Astro). Usado em `painel/document.astro`
- * para manter o painel 100% no browser, sem SSR.
- *
- * Como o projeto é 100% estático, URLs antigas no formato `/painel/<id>`
- * nunca chegam aqui — Apache devolve 404 antes do React rodar. Aceitamos
- * apenas `?id=<uuid>` na query string.
+ * Lê o ID do documento da URL pelo helper compartilhado — vide
+ * `src/utils/documentId.ts` para detalhes sobre o fallback SSG.
  */
-function resolveDocumentId(explicit?: string | null): string | null {
-  if (explicit && explicit.trim()) return explicit.trim();
-  if (typeof window === 'undefined') return null;
-  const fromQuery = new URLSearchParams(window.location.search).get('id');
-  return fromQuery?.trim() || null;
-}
-
 interface DocumentViewProps {
   documentId?: string | null;
 }
@@ -67,7 +56,7 @@ export default function DocumentView({ documentId }: DocumentViewProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   // ID efetivo — usa prop explícita se vier, senão descobre via query/path.
-  const effectiveId = useMemo(() => resolveDocumentId(documentId), [documentId]);
+  const effectiveId = resolveDocumentId(documentId);
 
   useEffect(() => {
     let cancelled = false;

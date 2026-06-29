@@ -2,16 +2,18 @@
 import Layout from '../../layouts/Layout.astro';
 import RequirementsForm from '../../react/RequirementsForm.tsx';
 import AppSidebar from '../../react/AppSidebar.tsx';
-
-const editId = Astro.url.searchParams.get('id') ?? undefined;
-const isEdit = Boolean(editId);
+/**
+ * O id do documento é resolvido no client pelo próprio `RequirementsForm`
+ * (lendo `window.location.search`) — em SSG, `Astro.url.searchParams` está
+ * vazio em build e o prop seria sempre `undefined`. Mantemos a página
+ * 100% estática passando um título/descrição genéricos e deixando o
+ * React decidir entre "novo" e "editar" com base na URL real do browser.
+ */
 ---
 
 <Layout
-  title={isEdit ? 'Editar documento · Doclyflow' : 'Novo documento · Doclyflow'}
-  description={isEdit
-    ? 'Atualize os dados de um levantamento de requisitos no Doclyflow.'
-    : 'Crie um novo documento de levantamento de requisitos no Doclyflow.'}
+  title="Documento · Doclyflow"
+  description="Crie ou atualize um documento de levantamento de requisitos no Doclyflow."
   hideChrome
   noindex
 >
@@ -19,7 +21,7 @@ const isEdit = Boolean(editId);
     <AppSidebar client:only="react" activeRoute="new" />
     <main class="min-w-0 lg:pl-65">
       <div class="mx-auto max-w-360 px-4 pt-20 pb-8 sm:px-6 sm:pt-24 sm:pb-10 lg:pt-10">
-        <RequirementsForm client:load documentId={editId} />
+        <RequirementsForm client:load />
       </div>
     </main>
   </div>
