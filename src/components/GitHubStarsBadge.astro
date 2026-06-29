@@ -21,7 +21,7 @@
 
 const repoUrl =
   (import.meta.env.PUBLIC_GITHUB_REPO as string | undefined)?.trim() ||
-  'https://github.com/SEU_USUARIO/doclyflow';
+  'https://github.com/marcosramoss/doclyflow.git';
 
 const variantRaw = (
   import.meta.env.PUBLIC_GITHUB_BADGE_VARIANT as string | undefined
@@ -68,18 +68,6 @@ const badgeAlt = `Estrelas no GitHub (${owner}/${repo})`;
     aria-label="Dar uma estrela no GitHub"
     class="group inline-flex items-center gap-2 rounded-md border border-white/15 bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
   >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      stroke="none"
-      aria-hidden="true"
-    >
-      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" />
-    </svg>
-    Star
   </a>
 )}
 
@@ -91,20 +79,6 @@ const badgeAlt = `Estrelas no GitHub (${owner}/${repo})`;
     aria-label="Dar uma estrela no GitHub"
     class="group inline-flex items-stretch overflow-hidden rounded-md border border-white/15 bg-brand-600 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
   >
-    <span class="inline-flex items-center gap-2 bg-brand-600 px-3.5 py-2 transition group-hover:bg-brand-700">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        stroke="none"
-        aria-hidden="true"
-      >
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" />
-      </svg>
-      Star
-    </span>
     <span class="inline-flex min-w-10 items-center justify-center border-l border-white/20 bg-brand-700 px-3.5 py-2 tabular-nums transition group-hover:bg-brand-800">
       <img
         src={splitBadge}
