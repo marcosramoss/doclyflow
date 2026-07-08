@@ -1,0 +1,42 @@
+---
+// =============================================================================
+// Doclyflow — wrapper de card de tela para a landingpage
+// =============================================================================
+// Envelope usado na seção "Telas do sistema" para renderizar uma tela
+// mockup com label à esquerda (com dot colorido) e badge "Prévia" à
+// direita. O badge existe para deixar claro que o conteúdo é estático
+// — não é um botão, não navega para lugar nenhum; é só um preview do
+// produto. O conteúdo da tela entra via <slot />.
+// =============================================================================
+
+import { Eye } from "lucide-react";
+
+interface Props {
+  /** Texto exibido no figcaption (ex.: "Dashboard — lista de documentos"). */
+  label: string;
+  /** Cor do dot (classes Tailwind, ex.: `bg-brand-500`). */
+  dotColor: string;
+}
+
+const { label, dotColor } = Astro.props;
+---
+
+<figure class="space-y-3">
+  <div class="flex items-center justify-between gap-3">
+    <figcaption class="min-w-0 truncate text-sm font-semibold text-slate-500">
+      <span
+        class={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle ${dotColor}`}
+      ></span>
+      {label}
+    </figcaption>
+    {/* Badge "Prévia" — explicita que o card é um mockup estático e não
+        uma tela clicável. `shrink-0` impede que o flex container
+        comprima o badge quando o título é longo. */}
+    <span
+      class="inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500"
+    >
+      <Eye size={10} /> Prévia
+    </span>
+  </div>
+  <slot />
+</figure>

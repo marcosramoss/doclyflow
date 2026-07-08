@@ -2,6 +2,11 @@
 import Layout from "../layouts/Layout.astro";
 import StepsTimeline from "../components/StepsTimeline.astro";
 import FeaturesGrid from "../components/FeaturesGrid.astro";
+import ScreenCard from "../components/ScreenCard.astro";
+import DashboardScreen from "../components/screens/DashboardScreen.astro";
+import DocumentFormScreen from "../components/screens/DocumentFormScreen.astro";
+import RequirementsScreen from "../components/screens/RequirementsScreen.astro";
+import PdfScreen from "../components/screens/PdfScreen.astro";
 import {
   Sparkles,
   FileText,
@@ -300,6 +305,56 @@ const steps = [
     title="Tudo que você precisa para um levantamento profissional"
     subtitle="Recursos pensados para analistas, product managers e desenvolvedores que precisam documentar com agilidade."
   />
+
+  <!-- TELAS DO SISTEMA — galeria com as 4 telas reais do produto em grid 2x2.
+       Posicionada entre FeaturesGrid e StepsTimeline para o fluxo
+       "features → como é o produto → como usar". -->
+  <section
+    class="relative overflow-hidden border-t border-slate-200 bg-slate-50 py-24"
+  >
+    <div class="mx-auto max-w-7xl px-6">
+      <div class="mx-auto max-w-2xl text-center">
+        <span
+          class="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-white/80 px-3 py-1 text-xs font-semibold text-brand-700 shadow-sm backdrop-blur"
+        >
+          <Sparkles size={12} /> Por dentro
+        </span>
+        <h2
+          class="mt-5 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
+        >
+          Veja o sistema por dentro
+        </h2>
+        <p class="mt-4 text-lg text-slate-600">
+          Quatro telas reais do produto: lista, criação, requisitos e o PDF final
+          pronto para enviar ao cliente.
+        </p>
+      </div>
+
+      <div class="mt-16 grid gap-12 lg:grid-cols-2">
+        <ScreenCard
+          label="Dashboard — lista de documentos"
+          dotColor="bg-brand-500"
+        >
+          <DashboardScreen />
+        </ScreenCard>
+        <ScreenCard label="Criar documento" dotColor="bg-violet-500">
+          <DocumentFormScreen />
+        </ScreenCard>
+        <ScreenCard
+          label="Visualização dos requisitos"
+          dotColor="bg-amber-500"
+        >
+          <RequirementsScreen />
+        </ScreenCard>
+        <ScreenCard
+          label="PDF gerado pronto para enviar"
+          dotColor="bg-emerald-500"
+        >
+          <PdfScreen />
+        </ScreenCard>
+      </div>
+    </div>
+  </section>
 
   <!-- Mesma estratégia do CTA "Comece agora" do hero: href real em
        `/painel/novo` (alvo legítimo) + `data-cta-auth-gate` apontando para

@@ -1,0 +1,136 @@
+---
+// =============================================================================
+// Doclyflow — mockup estático da tela de Dashboard
+// =============================================================================
+// Replica o layout real do `DashboardTable.tsx` (sidebar + top bar + tabs
+// de status + linhas de documentos) em modo estático, sem nenhuma
+// interatividade. Usado na landingpage como preview do produto.
+// =============================================================================
+
+import {
+  LayoutDashboard,
+  Search,
+  Plus,
+  CheckCircle2,
+  Clock,
+  FileText,
+} from "lucide-react";
+
+type Status = "draft" | "in-progress" | "completed";
+
+const docs: { title: string; client: string; status: Status; date: string }[] = [
+  { title: "Sistema de E-commerce B2B", client: "Acme Corp",       status: "in-progress", date: "23/05/2026" },
+  { title: "App Mobile de Pedidos",     client: "Beta Foods",       status: "draft",       date: "22/05/2026" },
+  { title: "Portal do Cliente",         client: "Banco XYZ",        status: "completed",   date: "18/05/2026" },
+  { title: "Sistema CRM Interno",       client: "Vendas Corp",      status: "in-progress", date: "15/05/2026" },
+  { title: "API de Integração",         client: "Parceiro Tech",    status: "draft",       date: "12/05/2026" },
+];
+
+const STATUS_STYLES: Record<Status, string> = {
+  draft: "bg-slate-100 text-slate-700",
+  "in-progress": "bg-blue-100 text-blue-700",
+  completed: "bg-emerald-100 text-emerald-700",
+};
+
+const STATUS_ICONS: Record<Status, typeof FileText> = {
+  draft: FileText,
+  "in-progress": Clock,
+  completed: CheckCircle2,
+};
+
+const STATUS_LABELS: Record<Status, string> = {
+  draft: "Rascunho",
+  "in-progress": "Em andamento",
+  completed: "Concluído",
+};
+---
+
+<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+  <!-- Chrome da "janela" -->
+  <div class="flex items-center gap-2 border-b border-slate-200 bg-slate-50/80 px-4 py-3">
+    <span class="h-3 w-3 rounded-full bg-red-400"></span>
+    <span class="h-3 w-3 rounded-full bg-yellow-400"></span>
+    <span class="h-3 w-3 rounded-full bg-green-400"></span>
+    <span class="ml-3 text-xs font-medium text-slate-500">
+      Doclyflow — Painel
+    </span>
+  </div>
+
+  <div class="flex">
+    <!-- Sidebar -->
+    <aside class="hidden w-44 shrink-0 border-r border-slate-200 bg-slate-50/50 p-3 sm:block">
+      <div class="flex items-center gap-2 px-2 py-2">
+        <span class="grid h-7 w-7 place-items-center rounded-md bg-brand-600 text-[10px] font-bold text-white">DF</span>
+        <span class="text-sm font-bold text-slate-900">Doclyflow</span>
+      </div>
+      <nav class="mt-4 space-y-1">
+        <div class="flex items-center gap-2 rounded-md bg-brand-50 px-2 py-1.5 text-sm font-semibold text-brand-700">
+          <LayoutDashboard size={14} /> Documentos
+        </div>
+      </nav>
+      <!-- Avatar no rodapé -->
+      <div class="mt-6 flex items-center gap-2 border-t border-slate-200 pt-3">
+        <span class="grid h-7 w-7 place-items-center rounded-full bg-violet-100 text-[10px] font-bold text-violet-700">MS</span>
+        <div class="min-w-0 flex-1">
+          <div class="truncate text-xs font-semibold text-slate-900">Marcos S.</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="min-w-0 flex-1 p-4">
+      <!-- Top bar -->
+      <div class="mb-4 flex items-center gap-2">
+        <div class="flex flex-1 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-400">
+          <Search size={14} /> Buscar documentos...
+        </div>
+        <button
+          type="button"
+          class="inline-flex items-center gap-1 rounded-md bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white"
+        >
+          <Plus size={12} /> Novo
+        </button>
+      </div>
+
+      <!-- Tabs de status -->
+      <div class="mb-3 flex gap-1 border-b border-slate-200 text-xs">
+        <div class="-mb-px border-b-2 border-brand-600 px-3 py-1.5 font-semibold text-brand-700">
+          Todos (5)
+        </div>
+        <div class="px-3 py-1.5 text-slate-500">Rascunho (2)</div>
+        <div class="px-3 py-1.5 text-slate-500">Em andamento (2)</div>
+        <div class="px-3 py-1.5 text-slate-500">Concluído (1)</div>
+      </div>
+
+      <!-- Lista -->
+      <ul class="space-y-1.5">
+        {
+          docs.map((d, i) => {
+            const Icon = STATUS_ICONS[d.status];
+            return (
+              <li class="flex items-center gap-3 rounded-md border border-slate-100 bg-white p-2.5">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-slate-100 text-xs font-bold text-slate-600 ring-1 ring-slate-200">
+                  #{i + 1}
+                </span>
+                <div class="min-w-0 flex-1">
+                  <div class="truncate text-sm font-medium text-slate-900">
+                    {d.title}
+                  </div>
+                  <div class="truncate text-xs text-slate-500">{d.client}</div>
+                </div>
+                <span
+                  class={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_STYLES[d.status]}`}
+                >
+                  <Icon size={10} /> {STATUS_LABELS[d.status]}
+                </span>
+                <span class="hidden text-[10px] text-slate-400 sm:inline">
+                  {d.date}
+                </span>
+              </li>
+            );
+          })
+        }
+      </ul>
+    </div>
+  </div>
+</div>

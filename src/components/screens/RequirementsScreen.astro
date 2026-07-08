@@ -1,0 +1,164 @@
+---
+// =============================================================================
+// Doclyflow — mockup estático da tela de visualização do documento
+// =============================================================================
+// Replica o layout real do `DocumentView.tsx` (header do projeto, chips de
+// stack, stats e grupos de requisitos funcionais / não-funcionais) em modo
+// estático. Usado na landingpage como preview do produto.
+// =============================================================================
+
+import { Clock, Download, FileCode } from "lucide-react";
+
+const STATS = [
+  { label: "Total",           value: 8, accent: "bg-brand-50 text-brand-700 border-brand-200"     },
+  { label: "Funcionais",      value: 5, accent: "bg-blue-50 text-blue-700 border-blue-200"       },
+  { label: "Não-funcionais",  value: 3, accent: "bg-violet-50 text-violet-700 border-violet-200" },
+  { label: "Críticos",        value: 1, accent: "bg-red-50 text-red-700 border-red-200"           },
+];
+
+const FUNCTIONAL: { id: number; text: string; priority: "high" | "critical" }[] = [
+  { id: 1, text: "Autenticação de usuários via SSO corporativo",     priority: "high"     },
+  { id: 2, text: "Catálogo de produtos com filtros avançados",       priority: "high"     },
+  { id: 3, text: "Checkout com cálculo de frete em tempo real",      priority: "critical" },
+];
+
+const NON_FUNCTIONAL: { id: number; text: string; priority: "high" | "critical" }[] = [
+  { id: 6, text: "Conformidade com LGPD para dados de clientes", priority: "critical" },
+  { id: 7, text: "Tempo de resposta < 200ms em p95",             priority: "high"     },
+];
+
+const PRIORITY_STYLES: Record<"high" | "critical", string> = {
+  high:     "bg-orange-100 text-orange-700",
+  critical: "bg-red-100 text-red-700",
+};
+---
+
+<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+  <div class="flex items-center gap-2 border-b border-slate-200 bg-slate-50/80 px-4 py-3">
+    <span class="h-3 w-3 rounded-full bg-red-400"></span>
+    <span class="h-3 w-3 rounded-full bg-yellow-400"></span>
+    <span class="h-3 w-3 rounded-full bg-green-400"></span>
+    <span class="ml-3 text-xs font-medium text-slate-500">
+      Doclyflow — Documento
+    </span>
+  </div>
+
+  <div class="p-4">
+    <!-- Header do projeto -->
+    <div class="flex items-start justify-between gap-2">
+      <div class="min-w-0">
+        <div class="text-[10px] font-semibold uppercase tracking-wider text-brand-600">
+          Levantamento de Requisitos
+        </div>
+        <h3 class="mt-0.5 truncate text-base font-bold text-slate-900">
+          Sistema de E-commerce B2B
+        </h3>
+        <div class="mt-0.5 text-xs text-slate-500">
+          Cliente: <span class="font-medium text-slate-700">Acme Corp</span>
+        </div>
+      </div>
+      <span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+        <Clock size={9} /> Em andamento
+      </span>
+    </div>
+
+    <!-- Stack -->
+    <div class="mt-2 flex flex-wrap gap-1">
+      {
+        ["React", "Node.js", "MySQL"].map((t) => (
+          <span class="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-700">
+            {t}
+          </span>
+        ))
+      }
+    </div>
+
+    <!-- Stats -->
+    <div class="mt-3 grid grid-cols-4 gap-1.5">
+      {
+        STATS.map((s) => (
+          <div class={`rounded-md border p-1.5 text-center ${s.accent}`}>
+            <div class="text-[8px] font-semibold uppercase tracking-wider opacity-80">
+              {s.label}
+            </div>
+            <div class="mt-0.5 text-sm font-bold tabular-nums">{s.value}</div>
+          </div>
+        ))
+      }
+    </div>
+
+    <!-- Funcionais -->
+    <div class="mt-3">
+      <div class="mb-1.5 flex items-center gap-1.5">
+        <span class="h-1.5 w-1.5 rounded-full bg-brand-500"></span>
+        <span class="text-xs font-semibold text-brand-700">
+          Requisitos Funcionais (5)
+        </span>
+      </div>
+      <ol class="space-y-1">
+        {
+          FUNCTIONAL.map((r) => (
+            <li class="flex items-start gap-2 rounded-md border border-slate-100 bg-white p-2 text-xs">
+              <span class="grid h-5 w-5 shrink-0 place-items-center rounded bg-slate-100 text-[10px] font-bold text-slate-700">
+                #{r.id}
+              </span>
+              <div class="flex-1">
+                <div class="text-slate-800">{r.text}</div>
+                <span
+                  class={`mt-1 inline-block rounded px-1.5 py-0.5 text-[9px] font-semibold ${PRIORITY_STYLES[r.priority]}`}
+                >
+                  {r.priority === "critical" ? "Crítica" : "Alta"}
+                </span>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+
+    <!-- Não-funcionais -->
+    <div class="mt-3">
+      <div class="mb-1.5 flex items-center gap-1.5">
+        <span class="h-1.5 w-1.5 rounded-full bg-violet-500"></span>
+        <span class="text-xs font-semibold text-violet-700">
+          Requisitos Não-Funcionais (3)
+        </span>
+      </div>
+      <ol class="space-y-1">
+        {
+          NON_FUNCTIONAL.map((r) => (
+            <li class="flex items-start gap-2 rounded-md border border-slate-100 bg-white p-2 text-xs">
+              <span class="grid h-5 w-5 shrink-0 place-items-center rounded bg-slate-100 text-[10px] font-bold text-slate-700">
+                #{r.id}
+              </span>
+              <div class="flex-1">
+                <div class="text-slate-800">{r.text}</div>
+                <span
+                  class={`mt-1 inline-block rounded px-1.5 py-0.5 text-[9px] font-semibold ${PRIORITY_STYLES[r.priority]}`}
+                >
+                  {r.priority === "critical" ? "Crítica" : "Alta"}
+                </span>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+
+    <!-- Ações -->
+    <div class="mt-3 flex gap-1.5">
+      <button
+        type="button"
+        class="inline-flex items-center gap-1 rounded-md bg-brand-600 px-2 py-1 text-[10px] font-semibold text-white"
+      >
+        <Download size={9} /> Exportar PDF
+      </button>
+      <button
+        type="button"
+        class="inline-flex items-center gap-1 rounded-md bg-violet-600 px-2 py-1 text-[10px] font-semibold text-white"
+      >
+        <FileCode size={9} /> Exportar MD
+      </button>
+    </div>
+  </div>
+</div>

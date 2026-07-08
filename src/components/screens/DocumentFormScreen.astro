@@ -1,0 +1,146 @@
+---
+// =============================================================================
+// Doclyflow — mockup estático da tela de criação de documento
+// =============================================================================
+// Replica o layout real do `RequirementsForm.tsx` (campos de título/cliente/
+// status, lista de requisitos, chips de stack, botão Salvar) em modo
+// estático. Usado na landingpage como preview do produto.
+// =============================================================================
+
+import { Save, Layers, Plus } from "lucide-react";
+
+const TECH_CHECKED = ["React", "Node.js", "MySQL", "Docker"];
+const TECH_UNCHECKED = ["TypeScript", "Tailwind CSS", "PostgreSQL", "MongoDB"];
+
+const requirements: { type: "functional" | "non-functional"; priority: "high" | "critical" | "medium"; text: string }[] = [
+  { type: "functional",      priority: "high",     text: "Cadastro de produtos com variantes de tamanho/cor" },
+  { type: "functional",      priority: "critical", text: "Checkout com cálculo de frete em tempo real" },
+  { type: "non-functional",  priority: "critical", text: "Conformidade com LGPD para dados de clientes" },
+  { type: "functional",      priority: "medium",   text: "Painel admin com dashboard de vendas" },
+];
+
+const PRIORITY_STYLES: Record<"high" | "critical" | "medium", string> = {
+  high:     "bg-orange-100 text-orange-700",
+  critical: "bg-red-100 text-red-700",
+  medium:   "bg-yellow-100 text-yellow-700",
+};
+---
+
+<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+  <div class="flex items-center gap-2 border-b border-slate-200 bg-slate-50/80 px-4 py-3">
+    <span class="h-3 w-3 rounded-full bg-red-400"></span>
+    <span class="h-3 w-3 rounded-full bg-yellow-400"></span>
+    <span class="h-3 w-3 rounded-full bg-green-400"></span>
+    <span class="ml-3 text-xs font-medium text-slate-500">
+      Doclyflow — Novo documento
+    </span>
+  </div>
+
+  <div class="p-5">
+    <h3 class="text-base font-bold text-slate-900">Novo documento</h3>
+    <p class="mt-0.5 text-xs text-slate-500">
+      Preencha os dados do projeto e liste seus requisitos.
+    </p>
+
+    <!-- Campos do projeto -->
+    <div class="mt-4 space-y-3">
+      <div>
+        <label class="block text-[11px] font-medium text-slate-600">Título</label>
+        <div class="mt-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900">
+          Sistema de E-commerce B2B
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[11px] font-medium text-slate-600">Cliente</label>
+          <div class="mt-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900">
+            Acme Corp
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-medium text-slate-600">Status</label>
+          <div class="mt-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900">
+            Em andamento
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Requisitos (preview da card) -->
+    <div class="mt-4 rounded-lg border border-slate-200 bg-slate-50/30 p-3">
+      <div class="mb-2 flex items-center justify-between">
+        <div class="flex items-center gap-1.5">
+          <Layers size={12} className="text-brand-600" />
+          <span class="text-xs font-semibold text-slate-700">
+            Requisitos ({requirements.length})
+          </span>
+        </div>
+        <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-600">
+          <Plus size={10} /> Adicionar
+        </span>
+      </div>
+      <ol class="space-y-1.5">
+        {
+          requirements.map((r, i) => (
+            <li class="flex items-start gap-2 rounded-md border border-slate-100 bg-white p-2 text-xs">
+              <span class="grid h-5 w-5 shrink-0 place-items-center rounded bg-brand-50 text-[10px] font-bold text-brand-700">
+                #{i + 1}
+              </span>
+              <div class="flex-1">
+                <div class="text-slate-800">{r.text}</div>
+                <div class="mt-1 flex gap-1">
+                  <span class="rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-semibold text-blue-700">
+                    {r.type === "functional" ? "Funcional" : "Não-funcional"}
+                  </span>
+                  <span
+                    class={`rounded px-1.5 py-0.5 text-[9px] font-semibold ${PRIORITY_STYLES[r.priority]}`}
+                  >
+                    {r.priority === "high"
+                      ? "Alta"
+                      : r.priority === "critical"
+                        ? "Crítica"
+                        : "Média"}
+                  </span>
+                </div>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+
+    <!-- Stack (chips mistos, alguns marcados) -->
+    <div class="mt-3 flex flex-wrap gap-1">
+      {
+        TECH_CHECKED.map((t) => (
+          <span class="rounded-md border border-brand-200 bg-brand-50 px-2 py-0.5 text-[10px] font-semibold text-brand-700">
+            ✓ {t}
+          </span>
+        ))
+      }
+      {
+        TECH_UNCHECKED.slice(0, 2).map((t) => (
+          <span class="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] text-slate-500">
+            {t}
+          </span>
+        ))
+      }
+    </div>
+
+    <!-- Botão Salvar -->
+    <div class="mt-4 flex justify-end gap-2">
+      <button
+        type="button"
+        class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="inline-flex items-center gap-1 rounded-md bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white"
+      >
+        <Save size={12} /> Salvar
+      </button>
+    </div>
+  </div>
+</div>

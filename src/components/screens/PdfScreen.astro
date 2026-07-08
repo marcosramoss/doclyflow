@@ -1,0 +1,101 @@
+---
+// =============================================================================
+// Doclyflow — mockup estático do PDF gerado
+// =============================================================================
+// Replica o layout do PDF profissional emitido por `pdfGenerator.ts` em
+// formato A4 (aspect ratio 1:1.41). Mostra header azul, bloco do projeto,
+// requisitos com badges e footer de paginação. Usado na landingpage.
+// =============================================================================
+
+const REQ: { id: number; text: string; priority: "Alta" | "Crítica" }[] = [
+  { id: 1, text: "Autenticação de usuários via SSO corporativo",   priority: "Alta"    },
+  { id: 2, text: "Catálogo de produtos com filtros avançados",     priority: "Alta"    },
+  { id: 3, text: "Checkout com cálculo de frete em tempo real",    priority: "Crítica" },
+  { id: 4, text: "Conformidade com LGPD para dados de clientes",   priority: "Crítica" },
+];
+
+const PRIORITY_BG: Record<"Alta" | "Crítica", string> = {
+  "Alta":    "bg-orange-100 text-orange-700",
+  "Crítica": "bg-red-100 text-red-700",
+};
+---
+
+<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+  <div class="flex items-center gap-2 border-b border-slate-200 bg-slate-50/80 px-4 py-3">
+    <span class="h-3 w-3 rounded-full bg-red-400"></span>
+    <span class="h-3 w-3 rounded-full bg-yellow-400"></span>
+    <span class="h-3 w-3 rounded-full bg-green-400"></span>
+    <span class="ml-3 truncate text-xs font-medium text-slate-500">
+      sistema-de-e-commerce-b2b_requisitos.pdf
+    </span>
+  </div>
+
+  <div class="p-4">
+    <!-- "Página A4" em miniatura (aspect ratio 1:1.41) -->
+    <div class="relative mx-auto aspect-[1/1.41] w-full overflow-hidden rounded border border-slate-200 bg-white">
+      <!-- Header azul -->
+      <div class="flex items-center justify-between bg-brand-600 px-3 py-1.5">
+        <span class="text-[9px] font-bold text-white">
+          Levantamento de Requisitos
+        </span>
+        <span class="text-[7px] text-brand-100">Doclyflow</span>
+      </div>
+      <div class="h-0.5 bg-brand-200"></div>
+
+      <!-- Bloco do projeto -->
+      <div class="m-2 rounded border border-slate-200 bg-slate-50 p-2">
+        <div class="text-[7px] font-bold tracking-wider text-slate-500">PROJETO</div>
+        <div class="mt-0.5 text-[10px] font-bold text-slate-900">
+          Sistema de E-commerce B2B
+        </div>
+        <div class="text-[7px] text-slate-500">Cliente: Acme Corp</div>
+        <div class="mt-0.5 text-[7px] text-slate-500">Status: Em andamento</div>
+      </div>
+
+      <!-- Requisitos -->
+      <div class="mx-2">
+        <div class="text-[8px] font-bold tracking-wider text-brand-700">
+          REQUISITOS FUNCIONAIS (4)
+        </div>
+        <div class="mt-0.5 h-px w-12 bg-brand-700"></div>
+        <ol class="mt-1.5 space-y-1">
+          {
+            REQ.map((r) => (
+              <li class="flex items-start gap-1 text-[8px] leading-tight">
+                <span class="grid h-3 w-3 shrink-0 place-items-center rounded bg-brand-50 text-[6px] font-bold text-brand-700 ring-1 ring-brand-200">
+                  #{r.id}
+                </span>
+                <div class="flex-1">
+                  <div class="text-slate-900">{r.text}</div>
+                  <div class="mt-0.5 flex gap-0.5">
+                    <span class="rounded bg-blue-100 px-1 text-[6px] font-bold text-blue-700">
+                      FUNCIONAL
+                    </span>
+                    <span
+                      class={`rounded px-1 text-[6px] font-bold ${PRIORITY_BG[r.priority]}`}
+                    >
+                      {r.priority.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+
+      <!-- Fade inferior sugerindo "tem mais" -->
+      <div
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white to-transparent"
+      >
+      </div>
+
+      <!-- Footer -->
+      <div class="absolute inset-x-0 bottom-1 flex justify-between px-2 text-[6px] text-slate-400">
+        <span>Gerado em 23/05/2026 • Doclyflow</span>
+        <span>Página 1 de 1</span>
+      </div>
+    </div>
+  </div>
+</div>
