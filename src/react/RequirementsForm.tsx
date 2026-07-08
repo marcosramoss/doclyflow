@@ -80,6 +80,10 @@ const TECH_CATALOG: readonly string[] = [
   'Docker',
   'GitHub Actions',
   'MongoDB',
+  'Astro',
+  'SolidJs',
+  'Prisma',
+  'Composer',
 ];
 
 function makeEmptyRequirement(): FormRequirement {
