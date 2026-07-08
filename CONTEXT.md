@@ -1,6 +1,6 @@
 # Doclyflow — Contexto do Projeto
 
-> Documentação viva do **Doclyflow** — gerador web de levantamentos de requisitos com exportação em **PDF** e **Markdown**, persistência em **MySQL** via **API REST PHP vanilla**, autenticação exclusiva via **Google OAuth**. Reflete o estado atual do código na `main` — atualizado após o ciclo de simplificações (R6+).
+> Documentação viva do **Doclyflow** — gerador web de levantamentos de requisitos com exportação em **PDF** e **Markdown**, persistência em **MySQL** via **API REST PHP vanilla**, autenticação exclusiva via **Google OAuth**. Reflete o estado atual do código na `main` — atualizado após o ciclo de robustez de PDF + títulos dinâmicos (R7+).
 
 ---
 
@@ -27,13 +27,15 @@ O **Doclyflow** permite criar, organizar e exportar documentos de levantamento d
 
 | Camada              | Tecnologia                         | Versão        |
 |---------------------|------------------------------------|---------------|
-| Framework           | Astro                              | ^5.4 (100% static) |
+| Framework           | Astro                              | ^7.0 (100% static) |
 | UI Islands          | React                              | ^19.0         |
 | Estilização         | Tailwind CSS (via `@tailwindcss/vite`) | ^4.1.4     |
 | Ícones              | lucide-react                       | ^0.473        |
-| PDF                 | jsPDF                              | ^2.5          |
+| PDF                 | jsPDF                              | ^4.2.1        |
 | Linguagem           | TypeScript (strict)                | ^5.7          |
 | Autenticação        | Google Identity Services (GSI)     | —             |
+| Testes              | Vitest + pdf-lib                   | ^4.1 / ^1.17  |
+| OG image (script)   | @resvg/resvg-js                    | ^2.6          |
 | Backend             | PHP 8.2 vanilla + MySQL 8          | —             |
 
 > O projeto é **100% estático**. `astro.config.mjs` não declara nenhum SSR adapter — leitura dinâmica de `?id=<uuid>` em `/painel/document` é resolvida client-side dentro da ilha React `DocumentView`. O `astro.config.mjs` faz **fail-fast** se `PUBLIC_API_URL` não estiver definida no `.env` (com mensagem explicando como criar o arquivo).
@@ -104,15 +106,19 @@ doclyflow/
    ├─ react/                        # Componentes interativos (React Islands)
    │  ├─ AppSidebar.tsx             # Sidebar com link Documentos + perfil (com avatar) + Sair
    │  ├─ DashboardTable.tsx         # Lista com filtros + busca + ações, inclui CTA "Novo Documento"
-   │  ├─ DocumentView.tsx           # Visualização + chips de stack + Exportar PDF/MD
+   │  ├─ DocumentView.tsx           # Visualização + chips de stack + Exportar PDF/MD + título dinâmico
    │  ├─ HeaderUserMenu.tsx         # "Entrar" (deslogado) ou avatar + nome + Sair (logado)
    │  ├─ LoginForm.tsx              # Login Google (GSI), redirect `?next=`
-   │  └─ RequirementsForm.tsx       # Form de requisitos + picker de stack + validação + salvar
+   │  ├─ RequirementsForm.tsx       # Form de requisitos + picker de stack + validação + salvar + título dinâmico
+   │  └─ hooks/
+   │     └─ useDocumentTitle.ts     # Hook reutilizável: sincroniza <title> + og:title + twitter:title
    ├─ styles/
    │  └─ global.css                 # @import "tailwindcss" + @theme tokens
    └─ utils/
       ├─ dates.ts                   # formatDate / formatDateTime (Intl PT-BR)
-      ├─ pdfGenerator.ts            # jsPDF: layout estruturado, badges, paginação
+      ├─ documentId.ts              # resolve ?id= no client (fallback SSG)
+      ├─ pdfGenerator.ts            # jsPDF: layout estruturado, badges, paginação com quebras confiáveis
+      ├─ pdfGenerator.test.ts       # suíte vitest (overflow, CRLF, integridade do buffer)
       └─ markdownGenerator.ts       # .md estruturado (título, stack, requisitos numerados)
 ```
 
@@ -328,6 +334,8 @@ php -S 127.0.0.1:8080 -t api/public
 
 Paginação automática via `ensureSpace(y, needed)` que cria nova página quando o espaço restante é insuficiente.
 
+**Robustez contra overflow (R7):** `drawWrappedText` itera linha-a-linha e chama `ensureSpace` por linha (quebras de página mid-parágrafo + normalização CRLF→LF); a seção "Descrição" tem `ensureSpace` antes do título; `renderRequirement` usa `lineHeightFactor = 14/11` casando com o tracking de `y` (`REQ_LINE_HEIGHT`) para que blocos vizinhos não se sobreponham. Coberto por `src/utils/pdfGenerator.test.ts` (6 testes vitest com fixtures de descrição/requisitos longos e verificação de integridade do buffer via `pdf-lib`).
+
 ### Markdown (`markdownGenerator.ts`)
 
 - Função pública: `downloadDocumentMarkdown(doc)` — dispara download de `<safeName>_requisitos.md`.
@@ -421,7 +429,7 @@ Mais detalhes: `deploy/README.md` (deploy XAMPP), `api/README.md` (backend detal
 
 ### Frontend
 - **Token em localStorage**: vulnerável a XSS. Para produção, mover para cookie HttpOnly + CSRF protection ou refresh tokens curtos.
-- **Sem testes automatizados ainda** — alvo: Vitest para `store.ts`, `auth.ts`, `pdfGenerator.ts`, `markdownGenerator.ts`.
+- **Cobertura de testes parcial**: suíte vitest cobre `pdfGenerator.ts` (6 testes, R7). Faltam: `store.ts`, `auth.ts`, `apiClient.ts`, `markdownGenerator.ts` e o hook `useDocumentTitle`.
 - **PDF sem fontes custom** ou imagens (apenas Helvetica built-in); suficiente até ~30 requisitos por documento.
 
 ### Backend
@@ -458,6 +466,9 @@ php -S 127.0.0.1:8080 -t api/public    # API em :8080
 
 # Frontend (em outro terminal)
 npm run dev                             # dev em http://localhost:4321
+npm run check                           # astro check (typecheck)
+npm run test                            # vitest run (uma vez)
+npm run test:watch                      # vitest em watch mode
 ```
 
 ### Full-stack (XAMPP — recomendado para "abrir e usar")
@@ -472,6 +483,12 @@ Primeiro login com sua conta Google — você será auto-registrado (vinculado p
 ---
 
 ## 15. Histórico de Mudanças Recentes
+
+- **R7 — PDF robusto, títulos dinâmicos, suíte de testes**:
+  - `pdfGenerator.ts`: fix de overflow de texto nas margens da folha. `drawWrappedText` itera linha-a-linha com `ensureSpace` por linha (quebras mid-parágrafo + normalização CRLF→LF); a seção "Descrição" ganhou `ensureSpace` antes do título; `renderRequirement` usa `lineHeightFactor = 14/11` casado com `REQ_LINE_HEIGHT` para que o tracking de `y` bata com a altura renderizada pelo jsPDF — blocos não se sobrepõem mais.
+  - **Títulos dinâmicos** via novo hook `src/react/hooks/useDocumentTitle.ts`. `DocumentView` mostra `documentos - <nome do projeto>` ao abrir um doc; `RequirementsForm` mostra `Editar/Novo: <nome> · Doclyflow` enquanto o usuário digita. O hook atualiza `<title>`, `meta[property="og:title"]` e `meta[name="twitter:title"]` em tempo real. O fallback estático emitido pelo `Layout.astro` continua aparecendo no frame de pré-hydration.
+  - **Suíte de testes vitest** com 6 testes em `src/utils/pdfGenerator.test.ts` (sanity, descrição longa, requisitos longos, newlines manuais, integridade do buffer via `pdf-lib`). Configuração em `vitest.config.ts`. Scripts `test` + `test:watch` adicionados ao `package.json`. DevDeps: `vitest@^4.1.10`, `pdf-lib@^1.17.1`.
+  - Bump de dependências: `astro@^7.0.6`, `@astrojs/node@^11.0.2`, `jspdf@^4.2.1`. O build segue 100% estático — o adapter `@astrojs/node` instalado permanece para completude de tipos do Astro, sem ser usado em runtime.
 
 - **R6 — Simplificação da Stack Tecnológica**: Picker de stack reformulado como **lista fixa de 14 nomes** (React, Vue.js, Next.js, Tailwind CSS, Node.js, TypeScript, PHP, Python, MySQL, PostgreSQL, Redis, Docker, GitHub Actions, MongoDB) + checkbox "Outra (especificar)" que revela input de texto livre. Persistido como `string[]` em `documents.technologies TEXT` (CSV). Conteúdo da antiga migration `0004_documents_technologies_text.sql` consolidado em `schema.sql`. Rota `GET /api/technologies` removida. Arquivos `src/data/technologiesCatalog.ts`, migrations `0002_*`/`0003_*`/`0004_*.sql` e o script `migrate-oauth.php` apagados.
 
