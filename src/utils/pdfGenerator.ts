@@ -62,9 +62,17 @@ function drawWrappedText(
   maxWidth: number,
   lineHeight = 14,
 ): number {
-  const lines = pdf.splitTextToSize(text, maxWidth);
-  pdf.text(lines, x, y);
-  return y + lines.length * lineHeight;
+  // Normaliza CRLF/CR → LF para que quebras de linha vindas de textarea
+  // sejam respeitadas consistentemente pelo `splitTextToSize`.
+  const normalized = (text ?? '').replace(/\r\n?/g, '\n');
+  const lines = pdf.splitTextToSize(normalized, maxWidth);
+  let currentY = y;
+  for (const line of lines) {
+    currentY = ensureSpace(pdf, currentY, lineHeight);
+    pdf.text(line, x, currentY);
+    currentY += lineHeight;
+  }
+  return currentY;
 }
 
 export function generateRequirementsPDF(doc: RequirementDocument): jsPDF {
@@ -125,6 +133,7 @@ export function generateRequirementsPDF(doc: RequirementDocument): jsPDF {
 
   // DESCRIÇÃO
   if (doc.description.trim()) {
+    y = ensureSpace(pdf, y, 40);
     pdf.setTextColor(COLORS.textMuted[0], COLORS.textMuted[1], COLORS.textMuted[2]);
     pdf.setFontSize(8);
     pdf.setFont('helvetica', 'bold');
@@ -165,12 +174,19 @@ export function generateRequirementsPDF(doc: RequirementDocument): jsPDF {
   y += 24;
 
   // REQUISITOS
+  // `lineHeight` deve casar com o `lineHeightFactor` que passamos para
+  // `pdf.text` na hora de renderizar — do contrário o tracking de `y`
+  // descola da altura real e blocos vizinhos podem se sobrepor.
+  const REQ_LINE_HEIGHT = 14;
+  const REQ_LINE_HEIGHT_FACTOR = REQ_LINE_HEIGHT / 11;
+
   const renderRequirement = (r: Requirement, idx: number): void => {
     const typeColor =
       r.type === 'functional' ? COLORS.functional : COLORS.nonFunctional;
 
-    const lines = pdf.splitTextToSize(r.description, CONTENT_WIDTH - 80);
-    const blockHeight = 38 + lines.length * 12;
+    const normalized = (r.description ?? '').replace(/\r\n?/g, '\n');
+    const lines = pdf.splitTextToSize(normalized, CONTENT_WIDTH - 80);
+    const blockHeight = 38 + lines.length * REQ_LINE_HEIGHT;
 
     y = ensureSpace(pdf, y, blockHeight + 8);
 
@@ -183,14 +199,18 @@ export function generateRequirementsPDF(doc: RequirementDocument): jsPDF {
     pdf.setFontSize(11);
     pdf.text(`#${idx}`, PAGE_MARGIN + 14, y + 15, { align: 'center' });
 
-    // Content
+    // Content — usa o mesmo lineHeightFactor (14/11) que `REQ_LINE_HEIGHT`
+    // representa, garantindo que o tracking de `y` bata com a altura
+    // renderizada por jsPDF.
     pdf.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(11);
-    pdf.text(lines, PAGE_MARGIN + 40, y + 14);
+    pdf.text(lines, PAGE_MARGIN + 40, y + 14, {
+      lineHeightFactor: REQ_LINE_HEIGHT_FACTOR,
+    });
 
     // Badges
-    const badgesY = y + 14 + lines.length * 12 + 2;
+    const badgesY = y + 14 + lines.length * REQ_LINE_HEIGHT + 2;
     let bx = PAGE_MARGIN + 40;
     bx +=
       drawBadge(
