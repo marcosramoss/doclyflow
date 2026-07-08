@@ -2,17 +2,20 @@
 // =============================================================================
 // Doclyflow — seção "Telas do sistema" da landingpage
 // =============================================================================
-// Grid 2x2 com 4 mockups reais (Dashboard, Criar documento, Requisitos,
-// PDF gerado) usados na landing como prova visual do produto. Implementa o
-// mesmo padrão de reveal-on-scroll usado em FeaturesGrid e StepsTimeline:
-//   - `data-screens-root` recebe `.is-visible` quando o IntersectionObserver
-//     detecta a entrada na viewport.
-//   - Cada ScreenCard recebe `index` e injeta `--screen-index`, que o CSS
-//     global usa para calcular o `transition-delay` (stagger de 100ms
-//     entre os 4 cards).
-//   - `<noscript>` fallback mostra o estado final para usuários sem JS.
-//   - `@media (prefers-reduced-motion: reduce)` desabilita as transições
-//     para quem prefere movimento reduzido.
+// 4 mockups reais (Dashboard, Criar documento, Requisitos, PDF gerado) usados
+// na landing como prova visual do produto, cada um acompanhado de um texto
+// ao lado descrevendo o processo e a experiência de uso.
+//
+// Layout: zigzag side-by-side. Em telas >= lg, o texto fica à esquerda nas
+// linhas pares e à direita nas linhas ímpares (visualmente alternado para
+// criar ritmo). Em mobile, empilha verticalmente (texto → tela, em ordem).
+//
+// Animação: o mesmo padrão de reveal-on-scroll usado em FeaturesGrid e
+// StepsTimeline — `data-screens-root` recebe `.is-visible` via
+// IntersectionObserver, e a regra CSS usa `--screen-index` (definido inline
+// em cada `.screens-row`) para calcular o `transition-delay` (stagger de
+// 100ms entre as 4 linhas). Fallbacks: `prefers-reduced-motion` e
+// `<noscript>` mostram o estado final imediatamente.
 // =============================================================================
 
 import { Sparkles } from "lucide-react";
@@ -29,21 +32,33 @@ const SCREENS = [
   {
     label: "Dashboard — lista de documentos",
     dotColor: "bg-brand-500",
+    stepNumber: "01",
+    headline: "Tudo o que você já criou, em uma tela.",
+    body: "Filtre por cliente, status ou texto. Abra o documento que precisa em um clique — sem perder tempo em pastas ou no histórico do navegador.",
     Component: DashboardScreen,
   },
   {
     label: "Criar documento",
     dotColor: "bg-violet-500",
+    stepNumber: "02",
+    headline: "Do template ao rascunho em menos de um minuto.",
+    body: "Título, cliente, descrição e requisitos — organizados em blocos para você não esquecer nenhum campo. Comece de um template ou do zero.",
     Component: DocumentFormScreen,
   },
   {
     label: "Visualização dos requisitos",
     dotColor: "bg-amber-500",
+    stepNumber: "03",
+    headline: "Visão geral sem perder o detalhe.",
+    body: "Cada requisito tem tipo, prioridade e descrição. Edite, reordene ou marque como concluído direto na lista — sem abrir cinco telas diferentes.",
     Component: RequirementsScreen,
   },
   {
     label: "PDF gerado pronto para enviar",
     dotColor: "bg-emerald-500",
+    stepNumber: "04",
+    headline: "Um clique. Pronto pro cliente.",
+    body: "PDF formatado com capa, índice e paginação. Baixe, anexe em e-mail ou imprima — sai com a cara de um documento feito por uma consultoria cara.",
     Component: PdfScreen,
   },
 ];
@@ -69,12 +84,39 @@ const SCREENS = [
       </p>
     </div>
 
-    <div data-screens-root class="mt-16 grid gap-12 lg:grid-cols-2">
+    <div data-screens-root class="mt-20 space-y-24 lg:space-y-32">
       {
         SCREENS.map((s, i) => (
-          <ScreenCard label={s.label} dotColor={s.dotColor} index={i}>
-            <s.Component />
-          </ScreenCard>
+          <div
+            class:list={[
+              "screens-row flex flex-col items-center gap-10 lg:flex-row lg:gap-16",
+              // Zigzag: linhas ímpares invertem a ordem visual (screen à
+              // esquerda, texto à direita). `flex-row-reverse` preserva a
+              // ordem do markup (texto → screen) para mobile.
+              i % 2 === 1 && "lg:flex-row-reverse",
+            ]}
+            style={`--screen-index:${i}`}
+          >
+            <div class="screens-row__text flex-1">
+              <div class="flex items-center gap-3">
+                <span class={`h-2 w-2 rounded-full ${s.dotColor}`} />
+                <span class="font-mono text-xs font-semibold tracking-widest text-slate-400">
+                  {s.stepNumber}
+                </span>
+              </div>
+              <h3 class="mt-5 text-2xl font-bold leading-tight tracking-tight text-slate-900 sm:text-3xl">
+                {s.headline}
+              </h3>
+              <p class="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
+                {s.body}
+              </p>
+            </div>
+            <div class="flex-1">
+              <ScreenCard label={s.label} dotColor={s.dotColor}>
+                <s.Component />
+              </ScreenCard>
+            </div>
+          </div>
         ))
       }
     </div>
@@ -82,10 +124,10 @@ const SCREENS = [
 </section>
 
 <style is:global>
-  /* Escopo via atributo para evitar que a classe `.screen-card` (caso
-   * reutilizada em outro ponto do site) fique com `opacity: 0` sem
-   * `.is-visible` para resgatá-la. */
-  [data-screens-root] .screen-card {
+  /* Animação no nível da LINHA (não do card). Cada `.screens-row` carrega
+   * seu próprio `--screen-index` inline, então o stagger de 100ms acontece
+   * entre as 4 linhas, não entre os sub-elementos. */
+  [data-screens-root] .screens-row {
     opacity: 0;
     transform: translateY(8px);
     transition:
@@ -96,7 +138,7 @@ const SCREENS = [
   /* Usuários com `prefers-reduced-motion` veem o estado final
    * imediatamente, sem transição. */
   @media (prefers-reduced-motion: reduce) {
-    [data-screens-root] .screen-card {
+    [data-screens-root] .screens-row {
       opacity: 1 !important;
       transform: none !important;
       transition: none !important;
@@ -104,9 +146,9 @@ const SCREENS = [
   }
 
   /* Dispara o reveal quando o IntersectionObserver adiciona `.is-visible`
-   * ao `[data-screens-root]`. Stagger 100ms por card via `--screen-index`
-   * definido inline em cada ScreenCard. */
-  [data-screens-root].is-visible .screen-card {
+   * ao `[data-screens-root]`. Stagger 100ms por linha via `--screen-index`
+   * definido inline. */
+  [data-screens-root].is-visible .screens-row {
     opacity: 1;
     transform: translateY(0);
     transition-delay: calc(var(--screen-index, 0) * 100ms);
@@ -120,7 +162,7 @@ const SCREENS = [
 -->
 <noscript>
   <style>
-    [data-screens-root] .screen-card {
+    [data-screens-root] .screens-row {
       opacity: 1 !important;
       transform: none !important;
     }
