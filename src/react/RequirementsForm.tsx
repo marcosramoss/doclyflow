@@ -24,6 +24,7 @@ import {
   type RequirementPriority,
   type RequirementType,
 } from '../data/types';
+import { useDocumentTitle } from './hooks/useDocumentTitle';
 import { resolveDocumentId } from '../utils/documentId';
 
 interface FormRequirement extends Omit<Requirement, 'id'> {
@@ -190,6 +191,20 @@ export default function RequirementsForm() {
       cancelled = true;
     };
   }, [effectiveId]);
+
+  // Espelha o título do formulário em `<title>` + og:title + twitter:title
+  // enquanto o usuário digita. O fallback estático `"Documento · Doclyflow"`
+  // do `novo.astro` cobre o frame de pré-hydration; o hook roda no client
+  // e aplica o valor calculado. Re-executa quando `form.title` muda
+  // (keystroke + hydration populando em modo edição) ou `isEditMode` muda.
+  const tabTitle = useMemo(() => {
+    const trimmed = form.title.trim();
+    const action = isEditMode ? 'Editar' : 'Novo';
+    return trimmed
+      ? `${action}: ${trimmed} · Doclyflow`
+      : `${action} documento · Doclyflow`;
+  }, [form.title, isEditMode]);
+  useDocumentTitle(tabTitle);
 
   const counters = useMemo(() => {
     const f = form.requirements.filter((r) => r.type === 'functional').length;

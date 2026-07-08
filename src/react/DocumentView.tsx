@@ -19,6 +19,7 @@ import {
   type Requirement,
   type RequirementDocument,
 } from '../data/types';
+import { useDocumentTitle } from './hooks/useDocumentTitle';
 import { downloadRequirementsPDF } from '../utils/pdfGenerator';
 import { downloadDocumentMarkdown } from '../utils/markdownGenerator';
 import { formatDate, formatDateTime } from '../utils/dates';
@@ -90,6 +91,11 @@ export default function DocumentView({ documentId }: DocumentViewProps) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [confirmDelete]);
+
+  // Espelha o título do projeto em `<title>` + og:title + twitter:title
+  // uma vez que o documento é hidratado. `null` enquanto `doc` ainda não
+  // carregou — preserva o fallback estático do `document.astro`.
+  useDocumentTitle(doc ? `documentos - ${doc.title}` : null);
 
   const grouped = useMemo(() => {
     if (!doc) return { functional: [], nonFunctional: [] };
