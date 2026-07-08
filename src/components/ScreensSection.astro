@@ -1,0 +1,150 @@
+---
+// =============================================================================
+// Doclyflow — seção "Telas do sistema" da landingpage
+// =============================================================================
+// Grid 2x2 com 4 mockups reais (Dashboard, Criar documento, Requisitos,
+// PDF gerado) usados na landing como prova visual do produto. Implementa o
+// mesmo padrão de reveal-on-scroll usado em FeaturesGrid e StepsTimeline:
+//   - `data-screens-root` recebe `.is-visible` quando o IntersectionObserver
+//     detecta a entrada na viewport.
+//   - Cada ScreenCard recebe `index` e injeta `--screen-index`, que o CSS
+//     global usa para calcular o `transition-delay` (stagger de 100ms
+//     entre os 4 cards).
+//   - `<noscript>` fallback mostra o estado final para usuários sem JS.
+//   - `@media (prefers-reduced-motion: reduce)` desabilita as transições
+//     para quem prefere movimento reduzido.
+// =============================================================================
+
+import { Sparkles } from "lucide-react";
+import ScreenCard from "./ScreenCard.astro";
+import DashboardScreen from "./screens/DashboardScreen.astro";
+import DocumentFormScreen from "./screens/DocumentFormScreen.astro";
+import RequirementsScreen from "./screens/RequirementsScreen.astro";
+import PdfScreen from "./screens/PdfScreen.astro";
+
+// Tipo do `Component` inferido automaticamente pelo TS a partir do array
+// literal (união de `typeof DashboardScreen | ...`). Sem necessidade de
+// declarar um `ScreenDef` à mão.
+const SCREENS = [
+  {
+    label: "Dashboard — lista de documentos",
+    dotColor: "bg-brand-500",
+    Component: DashboardScreen,
+  },
+  {
+    label: "Criar documento",
+    dotColor: "bg-violet-500",
+    Component: DocumentFormScreen,
+  },
+  {
+    label: "Visualização dos requisitos",
+    dotColor: "bg-amber-500",
+    Component: RequirementsScreen,
+  },
+  {
+    label: "PDF gerado pronto para enviar",
+    dotColor: "bg-emerald-500",
+    Component: PdfScreen,
+  },
+];
+---
+
+<section
+  class="relative overflow-hidden border-t border-slate-200 bg-slate-50 py-24"
+>
+  <div class="mx-auto max-w-7xl px-6">
+    <div class="mx-auto max-w-2xl text-center">
+      <span
+        class="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-white/80 px-3 py-1 text-xs font-semibold text-brand-700 shadow-sm backdrop-blur"
+      >
+        <Sparkles size={12} /> Por dentro
+      </span>
+      <h2
+        class="mt-5 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
+      >
+        Veja o sistema por dentro
+      </h2>
+      <p class="mt-4 text-lg text-slate-600">
+        Conheça o seu novo gestor de levantamentos de requisitos.
+      </p>
+    </div>
+
+    <div data-screens-root class="mt-16 grid gap-12 lg:grid-cols-2">
+      {
+        SCREENS.map((s, i) => (
+          <ScreenCard label={s.label} dotColor={s.dotColor} index={i}>
+            <s.Component />
+          </ScreenCard>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style is:global>
+  /* Escopo via atributo para evitar que a classe `.screen-card` (caso
+   * reutilizada em outro ponto do site) fique com `opacity: 0` sem
+   * `.is-visible` para resgatá-la. */
+  [data-screens-root] .screen-card {
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+      opacity 480ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Usuários com `prefers-reduced-motion` veem o estado final
+   * imediatamente, sem transição. */
+  @media (prefers-reduced-motion: reduce) {
+    [data-screens-root] .screen-card {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+
+  /* Dispara o reveal quando o IntersectionObserver adiciona `.is-visible`
+   * ao `[data-screens-root]`. Stagger 100ms por card via `--screen-index`
+   * definido inline em cada ScreenCard. */
+  [data-screens-root].is-visible .screen-card {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: calc(var(--screen-index, 0) * 100ms);
+  }
+</style>
+
+<!--
+  No-JS fallback. Inline styles bypassam o bloco global de <style>
+  (que esconde o conteúdo por padrão) para que usuários sem JS ainda
+  vejam a seção no estado final.
+-->
+<noscript>
+  <style>
+    [data-screens-root] .screen-card {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  </style>
+</noscript>
+
+<script>
+  // Reveal uma vez só — disconnect após o primeiro hit para a animação
+  // não voltar quando o usuário rolar pra cima e pra baixo.
+  const roots = document.querySelectorAll<HTMLElement>(
+    "[data-screens-root]",
+  );
+  for (const root of roots) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            io.unobserve(entry.target);
+          }
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -60px 0px" },
+    );
+    io.observe(root);
+  }
+</script>
