@@ -81,7 +81,7 @@ const TECH_CATALOG: readonly string[] = [
   'GitHub Actions',
   'MongoDB',
   'Astro',
-  'SolidJs',
+  'SolidJS',
   'Prisma',
   'Composer',
 ];

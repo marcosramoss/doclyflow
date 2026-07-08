@@ -275,7 +275,7 @@ export default function DashboardTable() {
 
           {filtered.length > 0 && (
             <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-              <table className="w-full min-w-[640px] divide-y divide-slate-200 text-sm [&_th]:max-w-max [&_td]:max-w-max [&_th]:whitespace-nowrap [&_td]:whitespace-nowrap">
+              <table className="w-full min-w-160 divide-y divide-slate-200 text-sm [&_th]:max-w-max [&_td]:max-w-max [&_th]:whitespace-nowrap [&_td]:whitespace-nowrap">
                 <thead className="bg-slate-50/60 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   <tr>
                     <th className="px-6 py-3">Documento</th>
