@@ -1,13 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
+  ArrowRight,
+  Briefcase,
   Check,
   Layers,
   Plus,
+  Rocket,
   Save,
+  ShoppingCart,
   Sparkles,
   Trash2,
   AlertCircle,
+  Users,
+  type LucideIcon,
 } from 'lucide-react';
 import {
   generateId,
@@ -24,6 +30,7 @@ import {
   type RequirementPriority,
   type RequirementType,
 } from '../data/types';
+import { TEMPLATES, type DocTemplate } from '../data/templates';
 import { useDocumentTitle } from './hooks/useDocumentTitle';
 import { resolveDocumentId } from '../utils/documentId';
 
@@ -133,6 +140,18 @@ const PRIORITY_BADGE: Record<RequirementPriority, string> = {
 const TYPE_BADGE: Record<RequirementType, string> = {
   functional: 'bg-blue-100 text-blue-700 ring-blue-200',
   'non-functional': 'bg-violet-100 text-violet-700 ring-violet-200',
+};
+
+/**
+ * Mapa de ícones lucide referenciados pelo `TemplateIconName` em
+ * `src/data/templates.ts`. Mantido aqui (em vez de inline no map) para
+ * que o JSX do card não precise lidar com resolução dinâmica.
+ */
+const TEMPLATE_ICONS: Record<DocTemplate['icon'], LucideIcon> = {
+  ShoppingCart,
+  Users,
+  Briefcase,
+  Rocket,
 };
 
 /**
@@ -323,6 +342,39 @@ export default function RequirementsForm() {
     };
   }
 
+  /**
+   * Pré-preenche o formulário com um template. Cada requisito recebe um
+   * ID novo (o mesmo template pode ser aplicado mais de uma vez sem
+   * colisão). Tecnologias do catálogo vão para os checkboxes; tecnologia
+   * customizada (string fora do `TECH_CATALOG`) cai no campo "Outra".
+   * Limpa erros e rola pro topo para o usuário ver o form preenchido.
+   */
+  function applyTemplate(tpl: DocTemplate): void {
+    const fromCatalog = tpl.technologies.filter((t) =>
+      TECH_CATALOG.includes(t),
+    );
+    const custom = tpl.technologies.find((t) => !TECH_CATALOG.includes(t));
+    setForm({
+      id: generateId(),
+      createdAt: '',
+      title: tpl.title,
+      client: '',
+      description: tpl.context,
+      status: 'draft',
+      requirements: tpl.requirements.map((r) => ({
+        id: generateId(),
+        type: r.type,
+        priority: r.priority,
+        description: r.description,
+      })),
+      selectedTechs: fromCatalog,
+      useOtherTech: Boolean(custom),
+      otherTechnology: custom ?? '',
+    });
+    setErrors({});
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   async function handleSave() {
     if (!validate()) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -401,6 +453,59 @@ export default function RequirementsForm() {
             </ul>
           </div>
         </div>
+      )}
+
+      {/* Templates — só aparecem no modo "novo documento" e quando o
+          usuário ainda não começou a digitar (form.title vazio). Ao clicar,
+          o form é pré-preenchido via `applyTemplate` e a seção se esconde
+          (form.title deixa de ser vazio), dando lugar ao form normal. */}
+      {!isEditMode && !form.title.trim() && (
+        <section className="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <header className="flex items-center gap-3 border-b border-slate-200 bg-slate-50/60 px-6 py-4">
+            <span className="grid h-9 w-9 place-items-center rounded-md bg-violet-50 text-violet-600">
+              <Sparkles size={18} />
+            </span>
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">
+                Começar de um template
+              </h2>
+              <p className="text-xs text-slate-500">
+                Economize tempo escolhendo um modelo pronto de requisitos.
+              </p>
+            </div>
+          </header>
+          <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-4">
+            {TEMPLATES.map((tpl) => {
+              const Icon = TEMPLATE_ICONS[tpl.icon];
+              return (
+                <button
+                  key={tpl.id}
+                  type="button"
+                  onClick={() => applyTemplate(tpl)}
+                  className="group flex flex-col items-start gap-3 rounded-xl border border-slate-200 bg-white p-5 text-left transition hover:border-violet-300 hover:bg-violet-50/50 hover:shadow-sm active:scale-[0.98]"
+                >
+                  <span
+                    className={`grid h-10 w-10 place-items-center rounded-lg ${tpl.accent}`}
+                  >
+                    <Icon size={20} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold text-slate-900">
+                      {tpl.name}
+                    </div>
+                    <p className="mt-1 line-clamp-3 text-xs text-slate-600">
+                      {tpl.description}
+                    </p>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-violet-700 transition-all group-hover:gap-2">
+                    Usar template
+                    <ArrowRight size={12} />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       {/* Card Dados do Projeto */}
