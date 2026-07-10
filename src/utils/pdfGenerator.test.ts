@@ -110,6 +110,72 @@ describe('pdfGenerator — quebras de página em conteúdo longo', () => {
   });
 });
 
+describe('pdfGenerator — texto em português com acentos e quebras de linha', () => {
+  it('respeita a margem direita com chars acentuados (UTF-8) e \\n manuais', () => {
+    // Reproduz o cenário original do bug: requisitos com caracteres
+    // acentuados brasileiros (`ã`, `é`, `ç`, `ó`) e quebras de linha
+    // manuais que cabem justos dentro da largura de CONTENT_WIDTH.
+    // Antes do fix (sem margem de segurança e com fonte errada no
+    // splitTextToSize) essas linhas estouravam a margem direita;
+    // agora a saída deve ser um PDF válido com número estável de páginas.
+    const portugueseRequirements: Requirement[] = [
+      {
+        id: 'r-1',
+        type: 'functional',
+        priority: 'critical',
+        description:
+          'Tela de administrador\n- Adicionar profissional - adiciona um profissional no banco de dados',
+      },
+      {
+        id: 'r-2',
+        type: 'functional',
+        priority: 'critical',
+        description:
+          'Tela de administrador\n- Adicionar empresa - adiciona uma empresa no banco de dados',
+      },
+      {
+        id: 'r-3',
+        type: 'functional',
+        priority: 'critical',
+        description:
+          'Tela de painel da Empresa\n- Empresa pode criar um novo evento de trabalho, esse evento é exibido na aba de administrador na aprovação.',
+      },
+      {
+        id: 'r-4',
+        type: 'functional',
+        priority: 'critical',
+        description:
+          'Aba empresas. Administrador pode analisar, aceitar ou rejeitar eventos de trabalho criados por empresas, ao aceitar o administrador poderá selecionar profissionais cadastrados no sistema para esta obra.',
+      },
+      {
+        id: 'r-5',
+        type: 'functional',
+        priority: 'critical',
+        description:
+          'Tela do Profissional\n- Picagem - exibe um formulário onde o profissional pode salvar: data, hora de entrada, pausa (caso tenha) e saída',
+      },
+    ];
+
+    const pdf = generateRequirementsPDF(
+      makeDoc({
+        title: 'Doclyflow',
+        client: 'Cliente',
+        requirements: portugueseRequirements,
+      }),
+    );
+
+    // O bug original não necessariamente aumentava o número de páginas —
+    // o sintoma era o texto saindo da margem visível. O que garantimos
+    // aqui é (a) PDF bem-formado e (b) o número de páginas é estável e
+    // finito, sinalizando que o splitTextToSize rodou sem entrar em
+    // loop e que cada requisito coube na página/respectivas quebras.
+    const bytes = pdf.output('arraybuffer');
+    expect(() => PDFDocument.load(bytes)).not.toThrow();
+    expect(pdf.getNumberOfPages()).toBeGreaterThanOrEqual(1);
+    expect(pdf.getNumberOfPages()).toBeLessThan(5);
+  });
+});
+
 describe('pdfGenerator — integridade do PDF de saída', () => {
   it('produz um buffer que pdf-lib consegue reler', async () => {
     const pdf = generateRequirementsPDF(

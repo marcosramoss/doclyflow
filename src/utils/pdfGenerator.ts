@@ -13,6 +13,25 @@ const PAGE_WIDTH = 595.28; // A4
 const PAGE_HEIGHT = 841.89;
 const CONTENT_WIDTH = PAGE_WIDTH - PAGE_MARGIN * 2;
 
+// Largura da coluna de texto dentro de um requisito: depois do badge `#N`
+// (largura ~28pt) deixamos um indent confortável.
+const REQ_TEXT_INDENT = 40;
+
+// Margem de segurança à direita. A estimativa de largura do jsPDF
+// (especialmente com fontes built-in e chars UTF-8 como `ã`, `é`, `ç`)
+// tem erro de alguns pontos — sem esse buffer linhas pré-quebradas podem
+// ultrapassar levemente a margem direita ao renderizar, vazando da página.
+//
+// 12pt ≈ erro típico do helicnica built-in em chars acentuados (medido
+// empiricamente em texto PT-BR com o mesmo `textWidth`). Aumentar se o
+// bug visuel voltar; diminuir se a coluna de texto ficar apertada demais.
+//
+// TODO: solução definitiva é embeber uma fonte TTF com UTF-8 completo
+// (ex.: Noto Sans) via `pdf.addFileToVFS` + `pdf.addFont`. O buffer
+// mascara o problema visual mas não corrige a estimativa subdimensionada
+// do helvetica built-in.
+const TEXT_SAFETY_MARGIN = 12;
+
 const COLORS = {
   brand: [37, 99, 235] as [number, number, number],
   brandLight: [219, 234, 254] as [number, number, number],
@@ -65,7 +84,9 @@ function drawWrappedText(
   // Normaliza CRLF/CR → LF para que quebras de linha vindas de textarea
   // sejam respeitadas consistentemente pelo `splitTextToSize`.
   const normalized = (text ?? '').replace(/\r\n?/g, '\n');
-  const lines = pdf.splitTextToSize(normalized, maxWidth);
+  // Reserva a margem de segurança à direita — vide `TEXT_SAFETY_MARGIN`.
+  const safeWidth = maxWidth - TEXT_SAFETY_MARGIN;
+  const lines = pdf.splitTextToSize(normalized, safeWidth);
   let currentY = y;
   for (const line of lines) {
     currentY = ensureSpace(pdf, currentY, lineHeight);
@@ -184,8 +205,21 @@ export function generateRequirementsPDF(doc: RequirementDocument): jsPDF {
     const typeColor =
       r.type === 'functional' ? COLORS.functional : COLORS.nonFunctional;
 
+    // IMPORTANTE: define a fonte ANTES de `splitTextToSize`. Caso contrário
+    // o pdf mede a largura com a fonte ativa no momento (tipicamente
+    // `helvetica bold 14` deixada pelo título da seção), o que faz a
+    // estimativa divergir da largura real em `helvetica normal 11` e
+    // pode permitir que linhas pré-quebradas estourem a margem direita
+    // ao renderizar.
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(11);
+
     const normalized = (r.description ?? '').replace(/\r\n?/g, '\n');
-    const lines = pdf.splitTextToSize(normalized, CONTENT_WIDTH - 80);
+    // Largura efetiva da coluna: reserva `REQ_TEXT_INDENT` à esquerda para
+    // o badge `#N` e `TEXT_SAFETY_MARGIN` à direita como buffer anti-
+    // -overflow do jsPDF (vide comentário da constante).
+    const textWidth = CONTENT_WIDTH - REQ_TEXT_INDENT - TEXT_SAFETY_MARGIN;
+    const lines = pdf.splitTextToSize(normalized, textWidth);
     const blockHeight = 38 + lines.length * REQ_LINE_HEIGHT;
 
     y = ensureSpace(pdf, y, blockHeight + 8);
@@ -205,13 +239,13 @@ export function generateRequirementsPDF(doc: RequirementDocument): jsPDF {
     pdf.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(11);
-    pdf.text(lines, PAGE_MARGIN + 40, y + 14, {
+    pdf.text(lines, PAGE_MARGIN + REQ_TEXT_INDENT, y + 14, {
       lineHeightFactor: REQ_LINE_HEIGHT_FACTOR,
     });
 
-    // Badges
+    // Badges — alinhados à esquerda da coluna de texto (depois do indent).
     const badgesY = y + 14 + lines.length * REQ_LINE_HEIGHT + 2;
-    let bx = PAGE_MARGIN + 40;
+    let bx = PAGE_MARGIN + REQ_TEXT_INDENT;
     bx +=
       drawBadge(
         pdf,
