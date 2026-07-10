@@ -18,7 +18,7 @@
 // `<noscript>` mostram o estado final imediatamente.
 // =============================================================================
 
-import { Sparkles } from "lucide-react";
+import { Sparkles, Check } from "lucide-react";
 import ScreenCard from "./ScreenCard.astro";
 import DashboardScreen from "./screens/DashboardScreen.astro";
 import DocumentFormScreen from "./screens/DocumentFormScreen.astro";
@@ -28,6 +28,25 @@ import PdfScreen from "./screens/PdfScreen.astro";
 // Tipo do `Component` inferido automaticamente pelo TS a partir do array
 // literal (união de `typeof DashboardScreen | ...`). Sem necessidade de
 // declarar um `ScreenDef` à mão.
+//
+// Cada item também carrega `features`: 3-4 bullets com check que aparecem
+// abaixo do `body` para preencher o vão vertical deixado pelo mockup
+// (sempre mais alto que o texto) sem competir visualmente com ele.
+//
+// IMPORTANTE: as `features` DEVEM corresponder a comportamento JÁ
+// implementado no produto. Manter em sincronia com o código real:
+//
+//   - Card 01 (lista)         → `src/react/DashboardTable.tsx`
+//   - Card 02 (criar)         → `src/react/RequirementsForm.tsx`
+//                                + `src/data/templates.ts`
+//   - Card 03 (visualização)  → `src/react/DocumentView.tsx`
+//   - Card 04 (PDF)           → `src/utils/pdfGenerator.ts`
+//
+// Adicionar feature aspiracional aqui quebra expectativa do usuário —
+// só entre no array depois de implementado no código do produto.
+// O array `pillLabels` segue a mesma regra: rótulos que aparecem no UI
+// real de cada tela (status tabs no dashboard, sections do form,
+// StatCards da visualização, blocos da página PDF).
 const SCREENS = [
   {
     label: "Dashboard — lista de documentos",
@@ -35,6 +54,15 @@ const SCREENS = [
     stepNumber: "01",
     headline: "Tudo o que você já criou, em uma tela.",
     body: "Filtre por cliente, status ou texto. Abra o documento que precisa em um clique — sem perder tempo em pastas ou no histórico do navegador.",
+    features: [
+      "Busca por título, cliente ou texto",
+      "Filtros por status com contadores",
+      "Salvos na nuvem automaticamente",
+      "Atualização ao mudar de aba",
+    ],
+    // Textos das pills = labels das status tabs reais no topo do
+    // dashboard (`STATUS_LABEL` em DashboardTable.tsx).
+    pillLabels: ["Rascunho", "Em andamento", "Concluído"],
     Component: DashboardScreen,
   },
   {
@@ -43,6 +71,18 @@ const SCREENS = [
     stepNumber: "02",
     headline: "Do template ao rascunho em menos de um minuto.",
     body: "Título, cliente, descrição e requisitos — organizados em blocos para você não esquecer nenhum campo. Comece de um template ou do zero.",
+    features: [
+      "4 templates prontos para começar",
+      "Validação completa antes de salvar",
+      "Salvar como rascunho quando quiser",
+      "Stack em chips selecionáveis",
+    ],
+    // Textos das pills = cabeçalhos reais das 3 sections do formulário
+    // (`Dados do projeto` / `Requisitos` / `Tecnologias` em
+    // RequirementsForm.tsx). Só `Dados` é genuinamente encurtado
+    // (de "Dados do projeto"); `Requisitos` e `Tecnologias` entram
+    // verbatim e cabem no pill por já serem curtos.
+    pillLabels: ["Dados", "Requisitos", "Tecnologias"],
     Component: DocumentFormScreen,
   },
   {
@@ -51,6 +91,16 @@ const SCREENS = [
     stepNumber: "03",
     headline: "Visão geral sem perder o detalhe.",
     body: "Cada requisito tem tipo, prioridade e descrição. Edite, reordene ou marque como concluído direto na lista — sem abrir cinco telas diferentes.",
+    features: [
+      "Numeração sequencial automática",
+      "Contadores de totais no topo",
+      "Grupos separados por tipo",
+      "Cores por prioridade com badges",
+    ],
+    // Textos das pills = 3 dos 4 StatCards no topo da visualização
+    // (`DocumentView.tsx` → componente StatCard com accents brand/blue/
+    // violet/red). `Não-funcionais` omitido por restrição de 3 colunas.
+    pillLabels: ["Total", "Funcionais", "Críticos"],
     Component: RequirementsScreen,
   },
   {
@@ -59,6 +109,16 @@ const SCREENS = [
     stepNumber: "04",
     headline: "Um clique. Pronto pro cliente.",
     body: "PDF formatado com capa, índice e paginação. Baixe, anexe em e-mail ou imprima — sai com a cara de um documento feito por uma consultoria cara.",
+    features: [
+      "Capa com projeto + cliente",
+      "Resumo com totais por tipo",
+      "Multi-página com quebra automática",
+      "Cores por tipo e prioridade",
+    ],
+    // Textos das pills = 3 partes estruturais da página PDF gerada
+    // (`pdfGenerator.ts`) — header (capa em brand), seção RESUMO com
+    // totais, e footer per-page com paginação.
+    pillLabels: ["Capa", "Resumo", "Rodapé"],
     Component: PdfScreen,
   },
 ];
@@ -89,7 +149,16 @@ const SCREENS = [
         SCREENS.map((s, i) => (
           <div
             class:list={[
-              "screens-row flex flex-col items-center gap-10 lg:flex-row lg:gap-16",
+              // Mobile: coluna simples — `items-center` em flex-col faria os
+              // filhos encolherem à largura intrínseca do conteúdo, e o mockup
+              // (com seu grid de stats/tabs) acabava vazando horizontalmente no
+              // viewport estreito do Mi 11 5G (~393px). Mantemos o stretch
+              // padrão no mobile.
+              // No desktop (lg), alinhamos ao topo (`lg:items-start`) para que
+              // o texto siga o mockup em ritmo de leitura. O vão vertical é
+              // preenchido pela lista de recursos renderizada em
+              // `.screens-row__text` (ver `s.features`).
+              "screens-row flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-16",
               // Zigzag: linhas ímpares invertem a ordem visual (screen à
               // esquerda, texto à direita). `flex-row-reverse` preserva a
               // ordem do markup (texto → screen) para mobile.
@@ -97,7 +166,7 @@ const SCREENS = [
             ]}
             style={`--screen-index:${i}`}
           >
-            <div class="screens-row__text flex-1">
+            <div class="screens-row__text w-full min-w-0 flex-1">
               <div class="flex items-center gap-3">
                 <span class={`h-2 w-2 rounded-full ${s.dotColor}`} />
                 <span class="font-mono text-xs font-semibold tracking-widest text-slate-400">
@@ -110,8 +179,87 @@ const SCREENS = [
               <p class="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
                 {s.body}
               </p>
+              {/* Lista de recursos complementares — preenche o vão vertical
+                  deixado pelo mockup (sempre mais alto que o texto) e reforça
+                  visualmente os benefícios sem repetir a copy do `body`. */}
+              <ul class="mt-8 space-y-2.5 rounded-lg border border-slate-200 bg-white p-3">
+                {
+                  s.features.map((f) => (
+                    <li class="flex items-start gap-2 text-sm text-slate-700">
+                      {/* size 16 + strokeWidth 2.5: mais peso visual que o
+                          default (size 14 + stroke 2) sem virar ilustração.
+                          Compensa o fato de o mobile ter DPR alto (~2.75 no
+                          Mi 11 5G), onde traits finos somem. */}
+                      <Check
+                        size={16}
+                        strokeWidth={2.5}
+                        className="mt-0.5 shrink-0 text-emerald-600"
+                      />
+                      <span>{f}</span>
+                    </li>
+                  ))
+                }
+              </ul>
+              {/* Decoração desktop-only: bloco puramente visual (`aria-hidden`
+                  true) que preenche o vão vertical entre a lista de recursos
+                  e a altura do mockup sem adicionar conteúdo novo (zero
+                  risco de prometer feature inexistente). `hidden lg:block`
+                  esconde em mobile — o stack empilhado (texto → features)
+                  já preenche a coluna naturalmente.
+
+                  Timeline numerada (01 → 04 conectados por linha fina):
+                  remete diretamente à estrutura da própria seção
+                  ("Telas do sistema" tem 4 cards de tela em zigzag).
+                  h-32 (128px) fixo garante que nunca excede a menor das
+                  4 telas (~440px PdfScreen A4).
+
+                  Sem tile emoldurado — foi o que desagradou na versão
+                  anterior. Aqui os 4 nós ficam livres sobre o
+                  `bg-slate-50/60`, leitura limpa e simétrica. */}
+              <div
+                class="hidden lg:block mt-8 h-32 overflow-hidden rounded-2xl bg-slate-50/60"
+                aria-hidden="true"
+              >
+                {/* 3 pills em row, conectadas por linhas finas slate-400
+                    (não slate-300) → contraste mínimo sobre bg-slate-50/60
+                    da outer. `h-0.5` (não h-px) no conector → evita render
+                    subpixel em HiDPI (Mi 11 5G DPR ~2.75, retina em geral).
+
+                    Tipografia + borda + padding EXATAMENTE iguais aos badges
+                    reais renderizados no DashboardTable.tsx via
+                    `inline-flex items-center gap-1 rounded-full
+                     px-2.5 py-0.5 text-[11px] font-semibold ring-1
+                     ${STATUS_STYLES[d.status]}` — fidelidade reconhecida,
+                    não estilização genérica.
+
+                    Cores (slate/blue/emerald) ficam FIXAS em todos os cards
+                    (carregam a hierarquia visual "base → ativo → pronto"
+                    consistente com a STATUS_STYLES do produto). Os TEXTOS
+                    mudam por card via `s.pillLabels`, referenciando
+                    elementos visíveis na tela correspondente. */}
+                {/* Pills alinhados a esquerda como o resto do conteudo do
+                    card (step indicator, headline, body, features list).
+                    Sem `absolute inset-0 flex justify-center` da versao
+                    anterior — agora pills fluem no canto superior-esquerdo
+                    do retangulo slate-50/60, em sequencia natural apos a
+                    lista de features acima. `pt-4 px-4` dá respiro do topo + laterais (sem folga inútil embaixo). */}
+                <div class="flex items-center gap-3 pt-4 px-4">
+                  {[
+                    { bg: "bg-slate-100", text: "text-slate-700",   ring: "ring-slate-200" },
+                    { bg: "bg-blue-100", text: "text-blue-700",     ring: "ring-blue-200" },
+                    { bg: "bg-emerald-100", text: "text-emerald-700", ring: "ring-emerald-200" },
+                  ].map((style, idx, arr) => (
+                    <>
+                      <span class={`inline-flex items-center gap-1 rounded-full ${style.bg} px-2.5 py-0.5 text-[11px] font-semibold ${style.text} ring-1 ${style.ring}`}>{s.pillLabels[idx] ?? ""}</span>
+                      {idx !== arr.length - 1 && (
+                        <span class="h-0.5 w-8 bg-slate-400"></span>
+                      )}
+                    </>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div class="flex-1">
+            <div class="w-full min-w-0 flex-1">
               <ScreenCard label={s.label} dotColor={s.dotColor}>
                 <s.Component />
               </ScreenCard>
