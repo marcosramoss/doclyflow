@@ -9,7 +9,7 @@
 O **Doclyflow** permite criar, organizar e exportar documentos de levantamento de requisitos diretamente no navegador. Os documentos persistem em **MySQL** através de uma **API REST PHP vanilla** em `api/`; autenticação exclusivamente via **Google OAuth** (Google Identity Services no frontend + verificação do ID token no backend). O token de sessão fica em `localStorage` do navegador.
 
 **Funcionalidades-chave:**
-- Landing page (hero com preview, features, "Como funciona")
+- Landing page (hero com preview, features, "Como funciona", "Telas do sistema" com mockups reais + copy atrelada à UI do produto + decoration pills contextual)
 - Login via Google (OAuth) — popup do Google Identity Services
 - Página de login com redirect honoring `?next=`
 - **Painel** de documentos com **filtros por status** e **busca textual**
@@ -86,7 +86,13 @@ doclyflow/
 │  └─ .gitignore
 └─ src/                             # Frontend Astro+React
    ├─ components/
-   │  └─ Header.astro               # Logo + HeaderUserMenu (Entrar | avatar+Sair)
+   │  ├─ Header.astro               # Logo + HeaderUserMenu (Entrar | avatar+Sair)
+   │  ├─ FeaturesGrid.astro         # Grid de features do hero
+   │  ├─ GitHubStarsBadge.astro     # Badge de estrelas do GitHub (hero CTA)
+   │  ├─ StepsTimeline.astro        # Timeline "Como funciona"
+   │  ├─ ScreensSection.astro       # Seção "Telas do sistema" — 4 cards (mockup+texto em zigzag) com features real-coupling + decoration pills contextual (R8)
+   │  ├─ ScreenCard.astro           # Wrapper de card reutilizado pela ScreensSection (zigzag-friendly: w-full + flip de ordem)
+   │  └─ screens/                   # 4 mockups das telas do produto (Dashboard | Form | Requisitos view | PDF)
    ├─ data/
    │  ├─ api.ts                     # Singleton do apiClient (lê PUBLIC_API_URL do .env)
    │  ├─ apiClient.ts               # Camada fetch: ApiError + createApiClient + Bearer + 401
@@ -483,6 +489,12 @@ Primeiro login com sua conta Google — você será auto-registrado (vinculado p
 ---
 
 ## 15. Histórico de Mudanças Recentes
+
+- **R8 — Seção 'Telas do sistema' com features reais + decoration pills contextual**:
+  - **Features por card**: nova prop `features: string[]` no array `SCREENS` de `src/components/ScreensSection.astro` lista 4 bullets por card com copy atrelada à UI real do produto — sincronizado com `DashboardTable.tsx` (status tabs reais, busca textual, filtros por status), `RequirementsForm.tsx` (form dinâmico de requisitos + picker de stack + validação cliente), `DocumentView.tsx` (StatCards com totais, grupos funcionais/NF, chips de stack) e `pdfGenerator.ts` (capa estruturada, badges, paginação automática). Política do header do `SCREENS`: tanto `features` quanto `pillLabels` devem refletir comportamento/UI real, não copy de marketing genérico.
+  - **Decoration pills contextual**: nova prop `pillLabels: string[]` por card renderizada como 3 status pills conectadas — replica EXATA dos badges reais do `DashboardTable.tsx` (tipografia `inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1` + paleta `STATUS_STYLES` slate→blue→emerald). Apenas os labels mudam por card: `Rascunho · Em andamento · Concluído` (status tabs reais) · `Dados · Requisitos · Tecnologias` (3 sections do form — `Dados` genuinamente encurtado de "Dados do projeto"; demais verbatim) · `Total · Funcionais · Críticos` (3 dos 4 StatCards, omitindo "Não-funcionais" por restrição de 3 colunas) · `Capa · Resumo · Rodapé` (3 partes estruturais do PDF). Cores fixas por status garantem hierarquia visual consistente entre os 4 cards; só os textos são contextual.
+  - **Layout polish da decoration**: pills alinhados à esquerda em flow normal (`flex gap-3 pt-4 px-4`, não mais `absolute inset-0 flex justify-center`); connector lines verticalmente centradas via `items-center` no flex container (sem isso, o conector de 2px ficava no topo do cross-axis enquanto as pills ~28px tomavam todo o espaço); conector `h-0.5` (2px) sobre `bg-slate-400` resolve subpixel em HiDPI e garante contraste mínimo sobre o `bg-slate-50/60` da outer. `aria-hidden="true"` no bloco decorativo (conteúdo já vive nos bullets da feature list — leitor de tela pula). `relative` removido do outer (dead code desde a saída do wrapper absoluto).
+  - **`ScreenCard.astro`**: adicionado `w-full` na `<figure>` para preencher a coluna em todas as variações do zigzag.
 
 - **R7 — PDF robusto, títulos dinâmicos, suíte de testes**:
   - `pdfGenerator.ts`: fix de overflow de texto nas margens da folha. `drawWrappedText` itera linha-a-linha com `ensureSpace` por linha (quebras mid-parágrafo + normalização CRLF→LF); a seção "Descrição" ganhou `ensureSpace` antes do título; `renderRequirement` usa `lineHeightFactor = 14/11` casado com `REQ_LINE_HEIGHT` para que o tracking de `y` bata com a altura renderizada pelo jsPDF — blocos não se sobrepõem mais.
